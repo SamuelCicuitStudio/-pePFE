@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Contro - Supervision</title>
-    <link rel="stylesheet" href="css/app.css?v=6" />
+    <link rel="stylesheet" href="css/app.css?v=7" />
     <link rel="icon" href="icons/power-16.png" type="image/png" />
   </head>
   <body>
@@ -314,9 +314,6 @@
               </svg>
               Contro
             </div>
-            <div class="tiny sb-meta" id="deviceMeta">
-              IP: -- | mDNS: -- | Version: --
-            </div>
           </div>
 
           <div class="sb-metrics" aria-label="Mesures">
@@ -377,6 +374,9 @@
 
         <div class="pages">
           <section id="liveTab" class="content active">
+            <div class="device-meta-line tiny" id="deviceMeta">
+              IP: -- | mDNS: -- | Version: --
+            </div>
             <div class="gauges">
               <div
                 class="gauge-card"
@@ -858,7 +858,7 @@
       </main>
     </div>
 
-    <script src="js/app.js?v=6"></script>
+    <script src="js/app.js?v=7"></script>
     <script src="js/mock.js"></script>
     <!-- Pour activer le mock en local: <script src="js/mock.js"></script> -->
   </body>
