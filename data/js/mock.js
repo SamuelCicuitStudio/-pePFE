@@ -57,26 +57,31 @@
   let historySeq = 0;
   let eventSeq = 0;
   const eventLog = [];
+  const nowEpoch = Math.floor(Date.now() / 1000);
   const sessions = [
     {
-      start_epoch: 1710000000,
-      end_epoch: 1710001200,
-      duration_s: 1200,
+      start_epoch: nowEpoch - 3600,
+      end_epoch: nowEpoch - 3000,
+      duration_s: 600,
       energy_wh: 42.5,
       peak_power_w: 180.2,
       peak_current_a: 12.4,
       success: true
     },
     {
-      start_epoch: 1710003600,
-      end_epoch: 1710004500,
-      duration_s: 900,
+      start_epoch: nowEpoch - 2400,
+      end_epoch: nowEpoch - 1800,
+      duration_s: 600,
       energy_wh: 31.1,
       peak_power_w: 150.7,
       peak_current_a: 10.1,
       success: true
     }
   ];
+
+  // RTC mock : epoch de reference (sec) + moment de synchronisation (ms).
+  let rtcEpochBaseSec = nowEpoch;
+  let rtcSetAtMs = Date.now();
 
   let simTick = 0;
   let lastSampleTimeMs = Date.now();
@@ -374,6 +379,11 @@
     }
 
     if (parsed.pathname === "/api/rtc" && method === "POST") {
+      const epoch = Number(body.epoch);
+      if (Number.isFinite(epoch) && epoch > 0) {
+        rtcEpochBaseSec = Math.floor(epoch);
+        rtcSetAtMs = Date.now();
+      }
       return jsonResponse({ ok: true });
     }
 

@@ -230,6 +230,11 @@
     setText("boardValue", formatNum(data.board_c, "C", 1));
     setText("ambientValue", formatNum(data.ambient_c, "C", 1));
 
+    // Barre de statut (toujours visible)
+    setText("sbCurrent", formatNum(data.current_a, "A", 2));
+    setText("sbMotorTemp", formatNum(data.motor_c, "C", 1));
+    setText("sbBoardTemp", formatNum(data.board_c, "C", 1));
+
     setLed("ds18Led", !!data.ds18_ok);
     setLed("bmeLed", !!data.bme_ok);
     setLed("adcLed", !!data.adc_ok);
@@ -310,6 +315,18 @@
   // ==============================
   // Sessions
   // ==============================
+  function formatEpochSec(epochSec) {
+    const sec = Number(epochSec);
+    if (!Number.isFinite(sec) || sec <= 0) return "--";
+    const d = new Date(sec * 1000);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+  }
+
   async function loadSessions() {
     const data = await fetchJson("/api/sessions");
     state.sessions = data.sessions || [];
@@ -328,8 +345,8 @@
     state.sessions.slice().reverse().forEach((s) => {
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${s.start_epoch}</td>
-        <td>${s.end_epoch}</td>
+        <td>${formatEpochSec(s.start_epoch)}</td>
+        <td>${formatEpochSec(s.end_epoch)}</td>
         <td>${s.duration_s}</td>
         <td>${s.energy_wh}</td>
         <td>${s.peak_power_w}</td>
@@ -351,6 +368,14 @@
 
   function formatClock(ms) {
     if (!Number.isFinite(ms)) return "--:--:--";
+    // Si on recoit un timestamp epoch (mock ou futur backend), on affiche HH:MM:SS.
+    if (ms > 1000000000000) {
+      const d = new Date(ms);
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      const ss = String(d.getSeconds()).padStart(2, "0");
+      return `${hh}:${mm}:${ss}`;
+    }
     const total = Math.max(0, Math.floor(ms / 1000));
     const hh = Math.floor(total / 3600);
     const mm = Math.floor((total % 3600) / 60);
@@ -837,32 +862,13 @@
   // ==============================
   // RTC
   // ==============================
-  async function sendRtcEpoch() {
+  async function syncRtcFromClient() {
     if (!ensureAuth()) return;
     const status = $("rtcStatus");
-    const epoch = parseInt($("rtcEpoch").value || "0", 10);
+    const epoch = Math.floor(Date.now() / 1000);
     try {
       await fetchJson("/api/rtc", { method: "POST", auth: true, body: { epoch } });
-      if (status) status.textContent = "RTC epoch OK";
-    } catch (err) {
-      if (status) status.textContent = `Erreur RTC: ${err.message}`;
-    }
-  }
-
-  async function sendRtcManual() {
-    if (!ensureAuth()) return;
-    const status = $("rtcStatus");
-    const payload = {
-      year: parseInt($("rtcYear").value || "0", 10),
-      month: parseInt($("rtcMonth").value || "0", 10),
-      day: parseInt($("rtcDay").value || "0", 10),
-      hour: parseInt($("rtcHour").value || "0", 10),
-      minute: parseInt($("rtcMinute").value || "0", 10),
-      second: parseInt($("rtcSecond").value || "0", 10)
-    };
-    try {
-      await fetchJson("/api/rtc", { method: "POST", auth: true, body: payload });
-      if (status) status.textContent = "RTC manuel OK";
+      if (status) status.textContent = "RTC synchronise (heure navigateur)";
     } catch (err) {
       if (status) status.textContent = `Erreur RTC: ${err.message}`;
     }
@@ -900,8 +906,7 @@
     $("calZeroBtn")?.addEventListener("click", sendCalZero);
     $("calApplyBtn")?.addEventListener("click", sendCalApply);
 
-    $("rtcSetEpoch")?.addEventListener("click", sendRtcEpoch);
-    $("rtcSetManual")?.addEventListener("click", sendRtcManual);
+    $("rtcSyncBtn")?.addEventListener("click", syncRtcFromClient);
 
     $("sessionReloadBtn")?.addEventListener("click", () => loadSessions().catch(() => {}));
   }
