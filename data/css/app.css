@@ -61,6 +61,22 @@ body {
   border-color: rgba(0, 255, 174, 0.2);
 }
 
+/* Icones (sprite SVG inline) */
+
+.svg-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+
 /* Sidebar */
 
 .sidebar {
@@ -113,11 +129,18 @@ body {
   transition: background 0.25s, box-shadow 0.25s, transform 0.08s;
 }
 
-.side-btn img {
-  width: 18px;
-  height: 18px;
+.side-btn .icon {
   filter: drop-shadow(0 0 4px rgba(0, 255, 174, 0.3));
   transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.icon-swap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.icon-swap .icon-off {
+  display: none;
 }
 
 .side-btn:hover {
@@ -140,7 +163,7 @@ body {
   border-color: rgba(255, 120, 120, 0.28);
 }
 
-.side-btn-stop img {
+.side-btn-stop .icon {
   filter: drop-shadow(0 0 4px rgba(255, 120, 120, 0.3));
 }
 
@@ -149,7 +172,12 @@ body {
   border-color: rgba(255, 255, 255, 0.14);
 }
 
-.side-btn.muted img {
+.side-btn.muted .icon-on {
+  display: none;
+}
+
+.side-btn.muted .icon-off {
+  display: inline-block;
   opacity: 0.7;
   transform: scale(0.92);
   animation: mutePulse 0.8s ease;
@@ -176,12 +204,27 @@ body {
   transition: background 0.25s, color 0.25s, box-shadow 0.25s, transform 0.08s;
   border-left: 4px solid transparent;
   color: rgba(235, 255, 248, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 10px;
   background: radial-gradient(
       circle at left,
       rgba(0, 255, 174, 0.02),
       transparent
     ),
     transparent;
+}
+
+.tab-icon {
+  opacity: 0.85;
+}
+
+.tab.active .tab-icon {
+  opacity: 1;
+}
+
+.tab-label {
+  line-height: 1;
 }
 
 .tab:hover {
@@ -219,7 +262,7 @@ body {
 }
 
 .statusbar {
-  padding: 12px 14px;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -235,9 +278,9 @@ body {
 
 .sb-left {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 210px;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
 .sb-brand {
@@ -245,37 +288,42 @@ body {
   font-weight: 800;
   letter-spacing: 0.4px;
   color: #00ffae;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sb-meta {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 420px;
 }
 
 .sb-metrics {
   flex: 1;
+  min-width: 0;
   display: flex;
   gap: 10px;
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .sb-metric {
-  padding: 8px 12px;
-  border-radius: 14px;
+  padding: 6px 10px;
+  border-radius: 999px;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 120px;
-}
-
-.sb-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.35px;
-  color: rgba(255, 255, 255, 0.6);
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 }
 
 .sb-value {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   color: #ffffff;
   font-variant-numeric: tabular-nums;
@@ -283,10 +331,10 @@ body {
 
 .sb-right {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
-  min-width: 260px;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
 }
 
 .sb-row {
@@ -294,13 +342,27 @@ body {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
-.sb-actions {
-  display: flex;
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(235, 255, 248, 0.92);
+  cursor: pointer;
+  transition: background 0.25s, box-shadow 0.25s, transform 0.08s;
+}
+
+.icon-btn:hover {
+  background: rgba(0, 255, 174, 0.12);
+  box-shadow: 0 0 10px rgba(0, 255, 174, 0.18) inset;
+  transform: translateY(-1px);
 }
 
 .btn.sb-btn {
@@ -1302,6 +1364,10 @@ input:checked + .slider:before {
     flex-wrap: wrap;
   }
 
+  .sb-meta {
+    display: none;
+  }
+
   .sb-left,
   .sb-right {
     min-width: 0;
@@ -1310,6 +1376,7 @@ input:checked + .slider:before {
 
   .sb-metrics {
     justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .service-grid {

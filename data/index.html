@@ -4,31 +4,302 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Contro - Supervision</title>
-    <link rel="stylesheet" href="css/app.css?v=5" />
+    <link rel="stylesheet" href="css/app.css?v=6" />
     <link rel="icon" href="icons/power-16.png" type="image/png" />
   </head>
   <body>
+    <!-- Sprite SVG (icones locales, sans ressources en ligne) -->
+    <svg
+      class="svg-sprite"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <symbol id="i-live" viewBox="0 0 24 24">
+        <path
+          d="M3 12h4l2-5 4 10 2-5h6"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </symbol>
+      <symbol id="i-chart" viewBox="0 0 24 24">
+        <path
+          d="M4 19V5m0 14h16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M6 15l4-4 4 4 6-6"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </symbol>
+      <symbol id="i-events" viewBox="0 0 24 24">
+        <path
+          d="M12 3l10 18H2L12 3z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M12 9v5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+        <circle cx="12" cy="17.5" r="1" fill="currentColor" />
+      </symbol>
+      <symbol id="i-config" viewBox="0 0 24 24">
+        <path
+          d="M4 7h10M4 17h16M14 7v10"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <circle
+          cx="16"
+          cy="7"
+          r="2"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <circle
+          cx="8"
+          cy="17"
+          r="2"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+      </symbol>
+      <symbol id="i-service" viewBox="0 0 24 24">
+        <path
+          d="M14.7 6.3a4 4 0 0 0-5.6 5.6L3 18.9V21h2.1l7-6.1a4 4 0 0 0 5.6-5.6l-2.1 2.1-2.8-2.8 1.9-2.3z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </symbol>
+      <symbol id="i-power" viewBox="0 0 24 24">
+        <path
+          d="M12 2v8"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+        <path
+          d="M7.5 4.8a7 7 0 1 0 9 0"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </symbol>
+      <symbol id="i-stop" viewBox="0 0 24 24">
+        <rect
+          x="7"
+          y="7"
+          width="10"
+          height="10"
+          rx="2"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+      </symbol>
+      <symbol id="i-volume" viewBox="0 0 24 24">
+        <path
+          d="M11 5 7 9H4v6h3l4 4V5z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M16 8a4 4 0 0 1 0 8"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+        <path
+          d="M18.5 5.5a7.5 7.5 0 0 1 0 13"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </symbol>
+      <symbol id="i-mute" viewBox="0 0 24 24">
+        <path
+          d="M11 5 7 9H4v6h3l4 4V5z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M16 9l5 6M21 9l-5 6"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24">
+        <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z" fill="currentColor" />
+      </symbol>
+      <symbol id="i-motor" viewBox="0 0 24 24">
+        <path
+          d="M7 12a5 5 0 1 0 10 0 5 5 0 0 0-10 0z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M12 2v3M12 19v3M2 12h3M19 12h3M4.7 4.7l2.1 2.1M17.2 17.2l2.1 2.1M19.3 4.7l-2.1 2.1M6.8 17.2l-2.1 2.1"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </symbol>
+      <symbol id="i-board" viewBox="0 0 24 24">
+        <rect
+          x="7"
+          y="7"
+          width="10"
+          height="10"
+          rx="2"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </symbol>
+      <symbol id="i-login" viewBox="0 0 24 24">
+        <path
+          d="M7 11V8a5 5 0 0 1 10 0v3"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+        <rect
+          x="6"
+          y="11"
+          width="12"
+          height="10"
+          rx="2"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+      </symbol>
+      <symbol id="i-logout" viewBox="0 0 24 24">
+        <path
+          d="M9 11V8a5 5 0 0 1 9 0v1"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+        <path
+          d="M6 11h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M3 12h4"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+      </symbol>
+    </svg>
+
     <div class="ui-container">
       <aside class="sidebar">
-        <div class="tab active" data-tab="live">Temps reel</div>
-        <div class="tab" data-tab="charts">Graphiques</div>
-        <div class="tab" data-tab="events">Alertes</div>
-        <div class="tab" data-tab="config">Configuration</div>
-        <div class="tab" data-tab="service">Service</div>
+        <div class="tab active" data-tab="live" title="Temps reel">
+          <svg class="icon tab-icon" aria-hidden="true">
+            <use href="#i-live"></use>
+          </svg>
+          <span class="tab-label">Temps reel</span>
+        </div>
+        <div class="tab" data-tab="charts" title="Graphiques">
+          <svg class="icon tab-icon" aria-hidden="true">
+            <use href="#i-chart"></use>
+          </svg>
+          <span class="tab-label">Graphiques</span>
+        </div>
+        <div class="tab" data-tab="events" title="Alertes">
+          <svg class="icon tab-icon" aria-hidden="true">
+            <use href="#i-events"></use>
+          </svg>
+          <span class="tab-label">Alertes</span>
+        </div>
+        <div class="tab" data-tab="config" title="Configuration">
+          <svg class="icon tab-icon" aria-hidden="true">
+            <use href="#i-config"></use>
+          </svg>
+          <span class="tab-label">Config</span>
+        </div>
+        <div class="tab" data-tab="service" title="Service">
+          <svg class="icon tab-icon" aria-hidden="true">
+            <use href="#i-service"></use>
+          </svg>
+          <span class="tab-label">Service</span>
+        </div>
 
         <div class="sidebar-spacer"></div>
 
         <div class="sidebar-footer">
           <button id="btnStart" class="side-btn side-btn-run" type="button">
-            <img src="icons/power.png" alt="" />
-            Marche
+            <svg class="icon" aria-hidden="true">
+              <use href="#i-power"></use>
+            </svg>
+            <span>Marche</span>
           </button>
           <button id="btnStop" class="side-btn side-btn-stop" type="button">
-            <img src="icons/redo-5-16.png" alt="" />
-            Arret
+            <svg class="icon" aria-hidden="true">
+              <use href="#i-stop"></use>
+            </svg>
+            <span>Arret</span>
           </button>
           <button id="muteBtn" class="side-btn side-btn-mute" type="button">
-            <img id="muteIcon" src="icons/volume-up-4-256.png" alt="" />
+            <span class="icon-swap" aria-hidden="true">
+              <svg class="icon icon-on" aria-hidden="true">
+                <use href="#i-volume"></use>
+              </svg>
+              <svg class="icon icon-off" aria-hidden="true">
+                <use href="#i-mute"></use>
+              </svg>
+            </span>
             <span id="muteLabel">Son</span>
           </button>
         </div>
@@ -37,23 +308,34 @@
       <main class="main">
         <header class="statusbar">
           <div class="sb-left">
-            <div class="sb-brand">Contro</div>
-            <div class="tiny" id="deviceMeta">
+            <div class="sb-brand">
+              <svg class="icon brand-icon" aria-hidden="true">
+                <use href="#i-power"></use>
+              </svg>
+              Contro
+            </div>
+            <div class="tiny sb-meta" id="deviceMeta">
               IP: -- | mDNS: -- | Version: --
             </div>
           </div>
 
-          <div class="sb-metrics">
-            <div class="sb-metric">
-              <div class="sb-label">Courant</div>
+          <div class="sb-metrics" aria-label="Mesures">
+            <div class="sb-metric" title="Courant">
+              <svg class="icon metric-icon" aria-hidden="true">
+                <use href="#i-bolt"></use>
+              </svg>
               <div class="sb-value" id="sbCurrent">-- A</div>
             </div>
-            <div class="sb-metric">
-              <div class="sb-label">T moteur</div>
+            <div class="sb-metric" title="Temperature moteur">
+              <svg class="icon metric-icon" aria-hidden="true">
+                <use href="#i-motor"></use>
+              </svg>
               <div class="sb-value" id="sbMotorTemp">-- C</div>
             </div>
-            <div class="sb-metric">
-              <div class="sb-label">T carte</div>
+            <div class="sb-metric" title="Temperature carte">
+              <svg class="icon metric-icon" aria-hidden="true">
+                <use href="#i-board"></use>
+              </svg>
               <div class="sb-value" id="sbBoardTemp">-- C</div>
             </div>
           </div>
@@ -61,15 +343,34 @@
           <div class="sb-right">
             <div class="sb-row">
               <div class="status-dot" id="stateDot" title="Etat"></div>
-              <div class="status-chip" id="stateChip">Etat: --</div>
-              <div class="status-chip" id="relayChip">Relais: --</div>
-              <div class="status-chip" id="faultChip">Defaut: --</div>
+              <div class="status-chip" id="stateChip">--</div>
+              <div class="status-chip" id="relayChip">R: --</div>
+              <div class="status-chip" id="faultChip">F: --</div>
               <div class="status-chip warn" id="warningChip">W--</div>
               <div class="status-chip err" id="errorChip">E--</div>
-            </div>
-            <div class="sb-actions">
-              <button class="btn sb-btn" id="loginBtn">Connexion</button>
-              <button class="btn sb-btn" id="logoutBtn">Deconnexion</button>
+
+              <button
+                class="icon-btn"
+                id="loginBtn"
+                type="button"
+                title="Connexion"
+                aria-label="Connexion"
+              >
+                <svg class="icon" aria-hidden="true">
+                  <use href="#i-login"></use>
+                </svg>
+              </button>
+              <button
+                class="icon-btn"
+                id="logoutBtn"
+                type="button"
+                title="Deconnexion"
+                aria-label="Deconnexion"
+              >
+                <svg class="icon" aria-hidden="true">
+                  <use href="#i-logout"></use>
+                </svg>
+              </button>
             </div>
           </div>
         </header>
@@ -265,7 +566,7 @@
                     <div class="chart-pill">
                       Temps: <b id="tempTime" class="mono">--:--:--</b>
                     </div>
-                    <div class="chart-pill">Max: <b>150 C</b></div>
+                    <div class="chart-pill">Max: <b>100 C</b></div>
                   </div>
                 </div>
 
@@ -557,7 +858,8 @@
       </main>
     </div>
 
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=6"></script>
     <script src="js/mock.js"></script>
+    <!-- Pour activer le mock en local: <script src="js/mock.js"></script> -->
   </body>
 </html>

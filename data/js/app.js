@@ -186,17 +186,14 @@
 
   function updateMuteButton() {
     const btn = $("muteBtn");
-    const icon = $("muteIcon");
     const label = $("muteLabel");
-    if (!btn || !icon || !label) return;
+    if (!btn || !label) return;
 
     if (buzzerEnabled) {
-      icon.src = "icons/volume-up-4-256.png";
       label.textContent = "Son";
       btn.classList.remove("muted");
       btn.title = "Couper le son";
     } else {
-      icon.src = "icons/mute-2-256.png";
       label.textContent = "Muet";
       btn.classList.add("muted");
       btn.title = "Activer le son";
@@ -211,7 +208,10 @@
     const ip = data.ip || "-";
     const mdns = data.mdns || "-";
     const sw = data.sw || "-";
-    setText("deviceMeta", `IP: ${ip} | mDNS: ${mdns} | Version: ${sw}`);
+    const meta = `IP: ${ip} | mDNS: ${mdns} | Version: ${sw}`;
+    setText("deviceMeta", meta);
+    const el = $("deviceMeta");
+    if (el) el.title = meta;
   }
 
   // ==============================
@@ -220,9 +220,9 @@
   async function pollStatus() {
     const data = await fetchJson("/api/status");
 
-    setText("stateChip", `Etat: ${formatState(data.state)}`);
-    setText("relayChip", `Relais: ${data.relay_on ? "marche" : "arret"}`);
-    setText("faultChip", `Defaut: ${data.fault_latched ? "OUI" : "NON"}`);
+    setText("stateChip", formatState(data.state));
+    setText("relayChip", `R: ${data.relay_on ? "marche" : "arret"}`);
+    setText("faultChip", `F: ${data.fault_latched ? "verrouille" : "ok"}`);
     setText("warningChip", data.last_warning ? `W${String(data.last_warning).padStart(2, "0")}` : "W--");
     setText("errorChip", data.last_error ? `E${String(data.last_error).padStart(2, "0")}` : "E--");
 
@@ -661,7 +661,7 @@
       valueKey: "motor_c",
       unit: "C",
       min: 0,
-      max: 150,
+      max: 100,
       tickStep: 10,
       precision: 1,
       dotRadius: 7
