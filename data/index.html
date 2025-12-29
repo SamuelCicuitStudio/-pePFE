@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Contro - Supervision</title>
-    <link rel="stylesheet" href="css/app.css?v=8" />
+    <link rel="stylesheet" href="css/app.css?v=12" />
     <link rel="icon" href="icons/power-16.png" type="image/png" />
   </head>
   <body>
@@ -386,13 +386,13 @@
                 <svg class="icon chip-icon" aria-hidden="true">
                   <use href="#i-warning"></use>
                 </svg>
-                <span class="chip-text" id="warningText">W--</span>
+                <span class="chip-text mono" id="warningText">0</span>
               </div>
               <div class="status-chip err notif" id="errorChip" title="Erreurs">
                 <svg class="icon chip-icon" aria-hidden="true">
                   <use href="#i-error"></use>
                 </svg>
-                <span class="chip-text" id="errorText">E--</span>
+                <span class="chip-text mono" id="errorText">0</span>
               </div>
 
               <button
@@ -427,7 +427,7 @@
               <div class="device-meta-line tiny" id="deviceMeta">
                 IP: -- | mDNS: -- | Version: --
               </div>
-              <div class="clock-card" aria-label="Horloge">
+              <div class="clock-card clock-floating" aria-label="Horloge">
                 <svg
                   id="clockSvg"
                   class="clock-svg"
@@ -542,6 +542,9 @@
                     y1="60"
                     x2="60"
                     y2="38"
+                    stroke="rgba(235, 255, 248, 0.92)"
+                    stroke-width="4"
+                    stroke-linecap="round"
                   ></line>
                   <line
                     id="clockMin"
@@ -550,6 +553,9 @@
                     y1="60"
                     x2="60"
                     y2="28"
+                    stroke="rgba(235, 255, 248, 0.92)"
+                    stroke-width="3"
+                    stroke-linecap="round"
                   ></line>
                   <line
                     id="clockSec"
@@ -558,6 +564,9 @@
                     y1="64"
                     x2="60"
                     y2="22"
+                    stroke="rgba(255, 90, 90, 0.95)"
+                    stroke-width="2"
+                    stroke-linecap="round"
                   ></line>
                   <circle class="clock-center" cx="60" cy="60" r="3"></circle>
                 </svg>
@@ -664,10 +673,10 @@
               <button id="btnRelayOn" class="btn" type="button">
                 Relais marche
               </button>
-              <button id="btnRelayOff" class="btn" type="button">
+              <button id="btnRelayOff" class="btn btn-danger" type="button">
                 Relais arret
               </button>
-              <button id="btnClearFault" class="btn" type="button">
+              <button id="btnClearFault" class="btn btn-warn" type="button">
                 Acquitter defaut
               </button>
             </div>
@@ -1051,7 +1060,7 @@
       </main>
     </div>
 
-    <script src="js/app.js?v=8"></script>
+    <script src="js/app.js?v=12"></script>
     <script src="js/mock.js"></script>
     <!-- Pour activer le mock en local: <script src="js/mock.js"></script> -->
   </body>

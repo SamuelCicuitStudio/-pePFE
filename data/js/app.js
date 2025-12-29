@@ -13,12 +13,13 @@
   const state = {
     historySeq: 0,
     eventSeq: 0,
+    eventsInitialized: false,
     samples: [],
     events: [],
     sessions: [],
     maxSamples: 800,
-    hasNewWarning: false,
-    hasNewError: false
+    newWarningCount: 0,
+    newErrorCount: 0
   };
 
   let buzzerEnabled = true;
@@ -224,6 +225,7 @@
     const minAngle = min * 6;
     const secAngle = ss * 6;
 
+    // Rotation autour du centre (cx=60, cy=60)
     h.setAttribute("transform", `rotate(${hourAngle} 60 60)`);
     m.setAttribute("transform", `rotate(${minAngle} 60 60)`);
     s.setAttribute("transform", `rotate(${secAngle} 60 60)`);
@@ -259,13 +261,7 @@
     setText("stateChip", formatState(data.state));
     setText("relayChip", `R: ${data.relay_on ? "marche" : "arret"}`);
     setText("faultChip", `F: ${data.fault_latched ? "verrouille" : "ok"}`);
-    setText("warningText", data.last_warning ? `W${String(data.last_warning).padStart(2, "0")}` : "W--");
-    setText("errorText", data.last_error ? `E${String(data.last_error).padStart(2, "0")}` : "E--");
-
-    const wChip = $("warningChip");
-    if (wChip) wChip.classList.toggle("active", !!data.last_warning);
-    const eChip = $("errorChip");
-    if (eChip) eChip.classList.toggle("active", !!data.last_error);
+    updateNotifBadges();
 
     setText("energyValue", formatNum(data.energy_wh, "Wh", 2));
     setText("boardValue", formatNum(data.board_c, "C", 1));
@@ -287,15 +283,30 @@
   }
 
   function updateNotifBadges() {
-    const w = $("warningChip");
-    const e = $("errorChip");
-    if (w) w.classList.toggle("has-new", !!state.hasNewWarning);
-    if (e) e.classList.toggle("has-new", !!state.hasNewError);
+    const wChip = $("warningChip");
+    const eChip = $("errorChip");
+    const wText = $("warningText");
+    const eText = $("errorText");
+
+    const wCount = Math.max(0, Number(state.newWarningCount) || 0);
+    const eCount = Math.max(0, Number(state.newErrorCount) || 0);
+
+    if (wText) wText.textContent = String(wCount);
+    if (eText) eText.textContent = String(eCount);
+
+    if (wChip) {
+      wChip.classList.toggle("has-new", wCount > 0);
+      wChip.classList.toggle("active", wCount > 0);
+    }
+    if (eChip) {
+      eChip.classList.toggle("has-new", eCount > 0);
+      eChip.classList.toggle("active", eCount > 0);
+    }
   }
 
   function clearNotifBadges() {
-    state.hasNewWarning = false;
-    state.hasNewError = false;
+    state.newWarningCount = 0;
+    state.newErrorCount = 0;
     updateNotifBadges();
   }
 
@@ -328,15 +339,28 @@
     state.eventSeq = data.seq_end || state.eventSeq;
 
     if (events.length) {
+      const eventsTab = $("eventsTab");
+      const eventsActive = !!(eventsTab && eventsTab.classList.contains("active"));
+      const shouldCount = state.eventsInitialized && !eventsActive;
       events.forEach((e) => {
         state.events.push(e);
         if (state.events.length > 200) state.events.shift();
-        if (e.level === 2) state.hasNewError = true;
-        else state.hasNewWarning = true;
+
+        if (shouldCount) {
+          if (e.level === 2) state.newErrorCount = Math.min(99, state.newErrorCount + 1);
+          else state.newWarningCount = Math.min(99, state.newWarningCount + 1);
+        }
       });
-      const eventsTab = $("eventsTab");
-      if (eventsTab && eventsTab.classList.contains("active")) clearNotifBadges();
-      else updateNotifBadges();
+
+      if (state.eventsInitialized) {
+        if (eventsActive) clearNotifBadges();
+        else updateNotifBadges();
+      }
+    }
+
+    if (!state.eventsInitialized) {
+      state.eventsInitialized = true;
+      updateNotifBadges();
     }
 
     renderEvents();
