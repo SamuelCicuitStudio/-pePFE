@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Contro - Supervision</title>
-    <link rel="stylesheet" href="css/app.css?v=7" />
+    <link rel="stylesheet" href="css/app.css?v=8" />
     <link rel="icon" href="icons/power-16.png" type="image/png" />
   </head>
   <body>
@@ -59,6 +59,41 @@
           stroke-linecap="round"
         />
         <circle cx="12" cy="17.5" r="1" fill="currentColor" />
+      </symbol>
+      <symbol id="i-warning" viewBox="0 0 24 24">
+        <path
+          d="M12 3l10 18H2L12 3z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M12 9v5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+        <circle cx="12" cy="17.5" r="1" fill="currentColor" />
+      </symbol>
+      <symbol id="i-error" viewBox="0 0 24 24">
+        <circle
+          cx="12"
+          cy="12"
+          r="9"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M9 9l6 6M15 9l-6 6"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
       </symbol>
       <symbol id="i-config" viewBox="0 0 24 24">
         <path
@@ -343,8 +378,22 @@
               <div class="status-chip" id="stateChip">--</div>
               <div class="status-chip" id="relayChip">R: --</div>
               <div class="status-chip" id="faultChip">F: --</div>
-              <div class="status-chip warn" id="warningChip">W--</div>
-              <div class="status-chip err" id="errorChip">E--</div>
+              <div
+                class="status-chip warn notif"
+                id="warningChip"
+                title="Alertes"
+              >
+                <svg class="icon chip-icon" aria-hidden="true">
+                  <use href="#i-warning"></use>
+                </svg>
+                <span class="chip-text" id="warningText">W--</span>
+              </div>
+              <div class="status-chip err notif" id="errorChip" title="Erreurs">
+                <svg class="icon chip-icon" aria-hidden="true">
+                  <use href="#i-error"></use>
+                </svg>
+                <span class="chip-text" id="errorText">E--</span>
+              </div>
 
               <button
                 class="icon-btn"
@@ -374,8 +423,146 @@
 
         <div class="pages">
           <section id="liveTab" class="content active">
-            <div class="device-meta-line tiny" id="deviceMeta">
-              IP: -- | mDNS: -- | Version: --
+            <div class="live-top-row">
+              <div class="device-meta-line tiny" id="deviceMeta">
+                IP: -- | mDNS: -- | Version: --
+              </div>
+              <div class="clock-card" aria-label="Horloge">
+                <svg
+                  id="clockSvg"
+                  class="clock-svg"
+                  viewBox="0 0 120 120"
+                  role="img"
+                  aria-label="Horloge analogique"
+                >
+                  <circle class="clock-ring" cx="60" cy="60" r="54"></circle>
+                  <circle class="clock-face" cx="60" cy="60" r="49"></circle>
+                  <g class="clock-ticks">
+                    <line
+                      class="clock-tick"
+                      x1="60"
+                      y1="10"
+                      x2="60"
+                      y2="18"
+                      transform="rotate(0 60 60)"
+                    ></line>
+                    <line
+                      class="clock-tick"
+                      x1="60"
+                      y1="10"
+                      x2="60"
+                      y2="18"
+                      transform="rotate(30 60 60)"
+                    ></line>
+                    <line
+                      class="clock-tick"
+                      x1="60"
+                      y1="10"
+                      x2="60"
+                      y2="18"
+                      transform="rotate(60 60 60)"
+                    ></line>
+                    <line
+                      class="clock-tick"
+                      x1="60"
+                      y1="10"
+                      x2="60"
+                      y2="18"
+                      transform="rotate(90 60 60)"
+                    ></line>
+                    <line
+                      class="clock-tick"
+                      x1="60"
+                      y1="10"
+                      x2="60"
+                      y2="18"
+                      transform="rotate(120 60 60)"
+                    ></line>
+                    <line
+                      class="clock-tick"
+                      x1="60"
+                      y1="10"
+                      x2="60"
+                      y2="18"
+                      transform="rotate(150 60 60)"
+                    ></line>
+                    <line
+                      class="clock-tick"
+                      x1="60"
+                      y1="10"
+                      x2="60"
+                      y2="18"
+                      transform="rotate(180 60 60)"
+                    ></line>
+                    <line
+                      class="clock-tick"
+                      x1="60"
+                      y1="10"
+                      x2="60"
+                      y2="18"
+                      transform="rotate(210 60 60)"
+                    ></line>
+                    <line
+                      class="clock-tick"
+                      x1="60"
+                      y1="10"
+                      x2="60"
+                      y2="18"
+                      transform="rotate(240 60 60)"
+                    ></line>
+                    <line
+                      class="clock-tick"
+                      x1="60"
+                      y1="10"
+                      x2="60"
+                      y2="18"
+                      transform="rotate(270 60 60)"
+                    ></line>
+                    <line
+                      class="clock-tick"
+                      x1="60"
+                      y1="10"
+                      x2="60"
+                      y2="18"
+                      transform="rotate(300 60 60)"
+                    ></line>
+                    <line
+                      class="clock-tick"
+                      x1="60"
+                      y1="10"
+                      x2="60"
+                      y2="18"
+                      transform="rotate(330 60 60)"
+                    ></line>
+                  </g>
+                  <line
+                    id="clockHour"
+                    class="clock-hand hour"
+                    x1="60"
+                    y1="60"
+                    x2="60"
+                    y2="38"
+                  ></line>
+                  <line
+                    id="clockMin"
+                    class="clock-hand min"
+                    x1="60"
+                    y1="60"
+                    x2="60"
+                    y2="28"
+                  ></line>
+                  <line
+                    id="clockSec"
+                    class="clock-hand sec"
+                    x1="60"
+                    y1="64"
+                    x2="60"
+                    y2="22"
+                  ></line>
+                  <circle class="clock-center" cx="60" cy="60" r="3"></circle>
+                </svg>
+                <div class="clock-digital mono" id="clockDigital">--:--:--</div>
+              </div>
             </div>
             <div class="gauges">
               <div
@@ -474,9 +661,15 @@
             </div>
 
             <div class="controls">
-              <button id="btnRelayOn">Relais marche</button>
-              <button id="btnRelayOff">Relais arret</button>
-              <button id="btnClearFault">Acquitter defaut</button>
+              <button id="btnRelayOn" class="btn" type="button">
+                Relais marche
+              </button>
+              <button id="btnRelayOff" class="btn" type="button">
+                Relais arret
+              </button>
+              <button id="btnClearFault" class="btn" type="button">
+                Acquitter defaut
+              </button>
             </div>
 
             <div class="timer-row">
@@ -858,7 +1051,7 @@
       </main>
     </div>
 
-    <script src="js/app.js?v=7"></script>
+    <script src="js/app.js?v=8"></script>
     <script src="js/mock.js"></script>
     <!-- Pour activer le mock en local: <script src="js/mock.js"></script> -->
   </body>

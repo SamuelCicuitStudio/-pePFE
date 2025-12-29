@@ -16,7 +16,9 @@
     samples: [],
     events: [],
     sessions: [],
-    maxSamples: 800
+    maxSamples: 800,
+    hasNewWarning: false,
+    hasNewError: false
   };
 
   let buzzerEnabled = true;
@@ -201,6 +203,40 @@
   }
 
   // ==============================
+  // Horloge (client)
+  // ==============================
+  function updateAnalogClock() {
+    const h = $("clockHour");
+    const m = $("clockMin");
+    const s = $("clockSec");
+    const d = $("clockDigital");
+    if (!h || !m || !s || !d) return;
+
+    const now = new Date();
+    const hh = now.getHours();
+    const mm = now.getMinutes();
+    const ss = now.getSeconds();
+
+    const min = mm + ss / 60;
+    const hour = (hh % 12) + min / 60;
+
+    const hourAngle = hour * 30;
+    const minAngle = min * 6;
+    const secAngle = ss * 6;
+
+    h.setAttribute("transform", `rotate(${hourAngle} 60 60)`);
+    m.setAttribute("transform", `rotate(${minAngle} 60 60)`);
+    s.setAttribute("transform", `rotate(${secAngle} 60 60)`);
+
+    d.textContent = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+  }
+
+  function startClock() {
+    updateAnalogClock();
+    setInterval(updateAnalogClock, 1000);
+  }
+
+  // ==============================
   // Infos device
   // ==============================
   async function loadInfo() {
@@ -223,8 +259,13 @@
     setText("stateChip", formatState(data.state));
     setText("relayChip", `R: ${data.relay_on ? "marche" : "arret"}`);
     setText("faultChip", `F: ${data.fault_latched ? "verrouille" : "ok"}`);
-    setText("warningChip", data.last_warning ? `W${String(data.last_warning).padStart(2, "0")}` : "W--");
-    setText("errorChip", data.last_error ? `E${String(data.last_error).padStart(2, "0")}` : "E--");
+    setText("warningText", data.last_warning ? `W${String(data.last_warning).padStart(2, "0")}` : "W--");
+    setText("errorText", data.last_error ? `E${String(data.last_error).padStart(2, "0")}` : "E--");
+
+    const wChip = $("warningChip");
+    if (wChip) wChip.classList.toggle("active", !!data.last_warning);
+    const eChip = $("errorChip");
+    if (eChip) eChip.classList.toggle("active", !!data.last_error);
 
     setText("energyValue", formatNum(data.energy_wh, "Wh", 2));
     setText("boardValue", formatNum(data.board_c, "C", 1));
@@ -243,6 +284,19 @@
     setStateDot(data.state, data.fault_latched);
 
     updateGauges(data);
+  }
+
+  function updateNotifBadges() {
+    const w = $("warningChip");
+    const e = $("errorChip");
+    if (w) w.classList.toggle("has-new", !!state.hasNewWarning);
+    if (e) e.classList.toggle("has-new", !!state.hasNewError);
+  }
+
+  function clearNotifBadges() {
+    state.hasNewWarning = false;
+    state.hasNewError = false;
+    updateNotifBadges();
   }
 
   // ==============================
@@ -277,7 +331,12 @@
       events.forEach((e) => {
         state.events.push(e);
         if (state.events.length > 200) state.events.shift();
+        if (e.level === 2) state.hasNewError = true;
+        else state.hasNewWarning = true;
       });
+      const eventsTab = $("eventsTab");
+      if (eventsTab && eventsTab.classList.contains("active")) clearNotifBadges();
+      else updateNotifBadges();
     }
 
     renderEvents();
@@ -301,15 +360,36 @@
         ? `E${String(e.code || 0).padStart(2, "0")}`
         : `W${String(e.code || 0).padStart(2, "0")}`;
       const msg = (e.level === 2 ? errText[e.code] : warnText[e.code]) || e.message || "";
+      const when = formatEventTime(e.ts_ms);
       const item = document.createElement("div");
       item.className = `event-item ${level}`;
       item.innerHTML = `
         <div class="event-kind">${label}</div>
         <div class="event-reason">${msg}</div>
-        <div class="event-time">${e.ts_ms}</div>
+        <div class="event-time mono">${when}</div>
       `;
       list.appendChild(item);
     });
+  }
+
+  function formatEventTime(tsMs) {
+    const ms = Number(tsMs);
+    if (!Number.isFinite(ms) || ms <= 0) return "--";
+
+    // Timestamp epoch (ms)
+    if (ms > 1000000000000) {
+      const d = new Date(ms);
+      const yyyy = d.getFullYear();
+      const mo = String(d.getMonth() + 1).padStart(2, "0");
+      const da = String(d.getDate()).padStart(2, "0");
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      const ss = String(d.getSeconds()).padStart(2, "0");
+      return `${yyyy}-${mo}-${da} ${hh}:${mm}:${ss}`;
+    }
+
+    // Sinon: ms depuis boot (ou equiv)
+    return `+${formatClock(ms)}`;
   }
 
   // ==============================
@@ -877,11 +957,26 @@
   // ==============================
   // Liaison UI
   // ==============================
+  function setActiveTab(index) {
+    const tabs = Array.from(document.querySelectorAll(".tab"));
+    const pages = Array.from(document.querySelectorAll(".content"));
+    tabs.forEach((t, idx) => t.classList.toggle("active", idx === index));
+    pages.forEach((c, idx) => c.classList.toggle("active", idx === index));
+
+    const tab = tabs[index];
+    if (tab && tab.dataset && tab.dataset.tab === "events") clearNotifBadges();
+  }
+
+  function setActiveTabByName(name) {
+    const tabs = Array.from(document.querySelectorAll(".tab"));
+    const index = tabs.findIndex((t) => (t.dataset ? t.dataset.tab : "") === name);
+    if (index >= 0) setActiveTab(index);
+  }
+
   function bindControls() {
     document.querySelectorAll(".tab").forEach((tab, i) => {
       tab.addEventListener("click", () => {
-        document.querySelectorAll(".tab").forEach((t, idx) => t.classList.toggle("active", idx === i));
-        document.querySelectorAll(".content").forEach((c, idx) => c.classList.toggle("active", idx === i));
+        setActiveTab(i);
       });
     });
 
@@ -893,6 +988,9 @@
     $("btnRunTimer")?.addEventListener("click", sendRunTimer);
 
     $("muteBtn")?.addEventListener("click", toggleMute);
+
+    $("warningChip")?.addEventListener("click", () => setActiveTabByName("events"));
+    $("errorChip")?.addEventListener("click", () => setActiveTabByName("events"));
 
     $("loginBtn")?.addEventListener("click", () => (window.location.href = "/login.html"));
     $("logoutBtn")?.addEventListener("click", () => {
@@ -918,6 +1016,7 @@
     bindControls();
     updateMuteButton();
     initCharts();
+    startClock();
 
     await loadInfo().catch(() => {});
     await loadConfig().catch(() => {});
