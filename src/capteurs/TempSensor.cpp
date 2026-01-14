@@ -1,4 +1,4 @@
-#include "capteurs/TempSensor.h"
+#include <TempSensor.hpp>
 #include <string.h>
 
 // -----------------------------------------------------------------------------

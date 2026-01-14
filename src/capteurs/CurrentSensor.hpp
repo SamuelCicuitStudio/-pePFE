@@ -7,8 +7,8 @@
 #ifndef CURRENT_SENSOR_H
 #define CURRENT_SENSOR_H
 
-#include "systeme/Config.h"
-#include "services/NVSManager.h"
+#include <Config.hpp>
+#include <NVSManager.hpp>
 
 class Acs712Sensor {
 public:

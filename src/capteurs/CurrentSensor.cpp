@@ -1,4 +1,4 @@
-#include "capteurs/CurrentSensor.h"
+#include <CurrentSensor.hpp>
 
 Acs712Sensor::Acs712Sensor() = default;
 

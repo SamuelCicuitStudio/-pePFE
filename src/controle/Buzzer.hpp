@@ -4,12 +4,14 @@
 #ifndef BUZZER_H
 #define BUZZER_H
 
-#include "systeme/Config.h"
-#include "services/NVSManager.h"
+#include <Config.hpp>
+#include <NVSManager.hpp>
 
 class Buzzer {
 public:
     enum class Pattern : uint8_t {
+        // Commande acceptee (bip court)
+        Command,
         // Avertissement general (2 bips courts)
         Warn,
         // Erreur non verrouillee (3 bips longs)
@@ -31,11 +33,13 @@ public:
     // - charge l'etat enabled_ depuis NVS (KEY_BUZZ_EN)
     // - demarre une tache de playback non-bloquante
     void begin();
+    void bip();
     // Active/desactive le buzzer et persiste dans NVS.
     void setEnabled(bool on);
     bool isEnabled() const;
 
     // Helpers (API lisible)
+    void playCommand();
     void playWarn();
     void playError();
     void playLatch();
@@ -52,8 +56,8 @@ private:
     void taskLoop_();
     void play_(Pattern p);
 
-    void buzzOn_(uint32_t ms);
-    void buzzOff_(uint32_t ms);
+    void playTone_(uint16_t freqHz, uint32_t durationMs);
+    void silence_(uint32_t ms);
 
     static Buzzer* inst_;
 

@@ -18,8 +18,8 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include "systeme/Config.h"
-#include "services/NVSManager.h"
+#include <Config.hpp>
+#include <NVSManager.hpp>
 
 class SessionHistory {
 public:

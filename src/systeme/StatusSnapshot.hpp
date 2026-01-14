@@ -15,7 +15,7 @@
 #define STATUS_SNAPSHOT_H
 
 #include <Arduino.h>
-#include "systeme/Config.h"
+#include <Config.hpp>
 
 struct SystemSnapshot {
     // -------------------- Metadonnees --------------------

@@ -15,8 +15,8 @@
 #ifndef RTCMANAGER_H
 #define RTCMANAGER_H
 
-#include "services/NVSManager.h"
-#include "systeme/Config.h"
+#include <NVSManager.hpp>
+#include <Config.hpp>
 
 class RTCManager {
 public:

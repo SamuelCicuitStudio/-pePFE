@@ -22,8 +22,8 @@
 // -----------------------------------------------------------------------------
 
 #include <stdint.h>
-#include "systeme/Utils.h"
-#include "capteurs/CurrentSensor.h"
+#include <Utils.hpp>
+#include <CurrentSensor.hpp>
 
 // ----------------------------------------------------------------------------
 // Historique sessions (SPIFFS)

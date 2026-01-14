@@ -53,7 +53,8 @@
     stop: "arret",
     relay_on: "relais marche",
     relay_off: "relais arret",
-    clear_fault: "acquittement"
+    clear_fault: "acquittement",
+    reset: "redemarrage"
   };
 
   // ==============================
@@ -817,6 +818,13 @@
 
     buzzerEnabled = !!data.buzzer_enabled;
     updateMuteButton();
+
+    const calZero = $("calZeroMv");
+    if (calZero && data.current_zero_mv != null) calZero.value = data.current_zero_mv;
+    const calSens = $("calSens");
+    if (calSens && data.current_sens_mv_a != null) calSens.value = data.current_sens_mv_a;
+    const calScale = $("calScale");
+    if (calScale && data.current_input_scale != null) calScale.value = data.current_input_scale;
   }
 
   function buildConfigPayload(form) {
@@ -1012,6 +1020,7 @@
     $("btnRunTimer")?.addEventListener("click", sendRunTimer);
 
     $("muteBtn")?.addEventListener("click", toggleMute);
+    $("btnReset")?.addEventListener("click", () => sendControl("reset"));
 
     $("warningChip")?.addEventListener("click", () => setActiveTabByName("events"));
     $("errorChip")?.addEventListener("click", () => setActiveTabByName("events"));

@@ -19,36 +19,28 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <ESPAsyncWebServer.h>
-#include "systeme/Config.h"
-#include "systeme/DeviceTransport.h"
-#include "capteurs/BusSampler.h"
-#include "services/SessionHistory.h"
-#include "services/EventLog.h"
-#include "services/RTCManager.h"
-#include "controle/Buzzer.h"
+#include <Config.hpp>
+#include <DeviceTransport.hpp>
+#include <BusSampler.hpp>
+#include <SessionHistory.hpp>
+#include <EventLog.hpp>
+#include <RTCManager.hpp>
+#include <Buzzer.hpp>
 
 class WiFiManager {
 public:
-    static void Init(Device* device,
-                     DeviceTransport* transport,
-                     BusSampler* sampler,
-                     SessionHistory* sessions,
+    static void Init(SessionHistory* sessions,
                      EventLog* events,
-                     RTCManager* rtc,
-                     Buzzer* buzzer);
+                     RTCManager* rtc);
     static WiFiManager* Get();
 
     // Lance Wi-Fi + mDNS + serveur HTTP (a appeler une seule fois au setup).
     void begin();
 
 private:
-    WiFiManager(Device* device,
-                DeviceTransport* transport,
-                BusSampler* sampler,
-                SessionHistory* sessions,
+    WiFiManager(SessionHistory* sessions,
                 EventLog* events,
-                RTCManager* rtc,
-                Buzzer* buzzer);
+                RTCManager* rtc);
 
     // Essay de connexion STA (SSID/PASS depuis NVS). Retourne true si connecte.
     bool startSta_();
@@ -85,13 +77,9 @@ private:
     void handleApiSessions_(AsyncWebServerRequest* request);
 
     // Dependances (non possedees)
-    Device* device_ = nullptr;
-    DeviceTransport* transport_ = nullptr;
-    BusSampler* sampler_ = nullptr;
     SessionHistory* sessions_ = nullptr;
     EventLog* events_ = nullptr;
     RTCManager* rtc_ = nullptr;
-    Buzzer* buzzer_ = nullptr;
 
     AsyncWebServer server_{80};
     TaskHandle_t workerTaskHandle_ = nullptr;
@@ -99,6 +87,6 @@ private:
     static WiFiManager* inst_;
 };
 
-#define WIFI WiFiManager::Get()
+#define WIF WiFiManager::Get()
 
 #endif // WIFI_MANAGER_H

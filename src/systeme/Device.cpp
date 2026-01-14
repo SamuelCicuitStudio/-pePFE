@@ -1,15 +1,13 @@
-#include "systeme/Device.h"
+#include <Device.hpp>
 #include <math.h>
 
 Device* Device::inst_ = nullptr;
 
 void Device::Init(Relay* relay,
                   StatusLeds* leds,
-                  Buzzer* buzzer,
                   Acs712Sensor* current,
                   Ds18b20Sensor* ds18,
                   Bme280Sensor* bme,
-                  BusSampler* sampler,
                   RTCManager* rtc,
                   SessionHistory* sessions,
                   EventLog* events) {
@@ -17,7 +15,7 @@ void Device::Init(Relay* relay,
     // On garde le pattern Singleton pour simplifier l'acces global
     // dans un firmware Arduino (pas de container de DI).
     if (!inst_) {
-        inst_ = new Device(relay, leds, buzzer, current, ds18, bme, sampler, rtc, sessions, events);
+        inst_ = new Device(relay, leds, current, ds18, bme, rtc, sessions, events);
     }
 }
 
@@ -27,33 +25,33 @@ Device* Device::Get() {
 
 Device::Device(Relay* relay,
                StatusLeds* leds,
-               Buzzer* buzzer,
                Acs712Sensor* current,
                Ds18b20Sensor* ds18,
                Bme280Sensor* bme,
-               BusSampler* sampler,
                RTCManager* rtc,
                SessionHistory* sessions,
                EventLog* events)
     : relay_(relay),
       leds_(leds),
-      buzzer_(buzzer),
       current_(current),
       ds18_(ds18),
       bme_(bme),
-      sampler_(sampler),
       rtc_(rtc),
       sessions_(sessions),
       events_(events) {
-    // Mutex pour proteger snapshot_ et certaines variables partagees.
-    mutex_ = xSemaphoreCreateMutex();
-
-    // File de commandes asynchrones (bouton + HTTP).
-    // Les commandes sont traitees dans la tache controlTask_().
-    cmdQueue_ = xQueueCreate(10, sizeof(Command));
 }
 
 void Device::begin() {
+    if (!mutex_) {
+        // Mutex pour proteger snapshot_ et certaines variables partagees.
+        mutex_ = xSemaphoreCreateMutex();
+    }
+    if (!cmdQueue_) {
+        // File de commandes asynchrones (bouton + HTTP).
+        // Les commandes sont traitees dans la tache controlTask_().
+        cmdQueue_ = xQueueCreate(10, sizeof(Command));
+    }
+
     // Charge tous les parametres persistants (NVS -> cache runtime)
     loadConfig_();
 
@@ -62,8 +60,8 @@ void Device::begin() {
     setState_(DeviceState::Idle);
 
     // Le sampler tourne en tache dediee (historique et donnees alignees).
-    if (sampler_) {
-        sampler_->start();
+    if (BUS_SAMPLER) {
+        BUS_SAMPLER->start();
     }
 
     // Tache principale "control" : gestion commandes + securites + energie.
@@ -145,15 +143,15 @@ bool Device::applyConfig(const ConfigUpdate& cfg) {
     // Sampler : si la frequence change, on recalcule la periode.
     if (cfg.hasSamplingHz) {
         CONF->PutUInt(KEY_SAMPLING_HZ, cfg.samplingHz);
-        if (sampler_) {
-            sampler_->begin(current_, ds18_, bme_, cfg.samplingHz);
-            sampler_->start();
+        if (BUS_SAMPLER) {
+            BUS_SAMPLER->begin(current_, ds18_, bme_, cfg.samplingHz);
+            BUS_SAMPLER->start();
         }
     }
 
     // Activation buzzer (persistante en NVS deja geree par Buzzer::setEnabled)
-    if (cfg.hasBuzzerEnabled && buzzer_) {
-        buzzer_->setEnabled(cfg.buzzerEnabled);
+    if (cfg.hasBuzzerEnabled) {
+        BUZZ->setEnabled(cfg.buzzerEnabled);
     }
 
     // Wi-Fi : SSID/PASS et mode (STA/AP). Le demarrage/restart Wi-Fi est gere
@@ -187,6 +185,7 @@ void Device::setCurrentCalibration(float zeroMv, float sensMvPerA, float inputSc
 void Device::notifyCommand() {
     // Petit blink qui indique qu'une commande a ete acceptee (UI/bouton).
     if (leds_) leds_->notifyCommand();
+    BUZZ->playCommand();
 }
 
 bool Device::submitCommand(const Command& cmd) {
@@ -292,8 +291,7 @@ void Device::processCommands_() {
                 }
                 break;
             case Command::Type::Reset:
-                // Reset systeme demande par bouton long ou API.
-                ESP.restart();
+                // Reset systeme desactive pour eviter les redemarrages non desires.
                 break;
         }
     }
@@ -506,15 +504,13 @@ void Device::raiseWarning_(WarnCode code, const char* msg, const char* src) {
         // La LED CMD affiche les alertes en "rafales rapides" (voir StatusLeds).
         leds_->enqueueAlert(EventLevel::Warning, lastWarningCode_);
     }
-    if (buzzer_) {
-        // Certains warnings ont des sons specifiques (web / auth / client).
-        if (code == WarnCode::W07_AuthFail) {
-            buzzer_->playAuthFail();
-        } else if (code == WarnCode::W09_ClientGone) {
-            buzzer_->playClientDisconnect();
-        } else {
-            buzzer_->playWarn();
-        }
+    // Certains warnings ont des sons specifiques (web / auth / client).
+    if (code == WarnCode::W07_AuthFail) {
+        BUZZ->playAuthFail();
+    } else if (code == WarnCode::W09_ClientGone) {
+        BUZZ->playClientDisconnect();
+    } else {
+        BUZZ->playWarn();
     }
 }
 
@@ -533,13 +529,11 @@ void Device::raiseError_(ErrorCode code, const char* msg, const char* src) {
     if (leds_) {
         leds_->enqueueAlert(EventLevel::Error, lastErrorCode_);
     }
-    if (buzzer_) {
-        // OVC + Overtemp sont consideres "latch" : pattern sonore specifique.
-        if (code == ErrorCode::E01_OvcLatched || code == ErrorCode::E02_OverTemp) {
-            buzzer_->playLatch();
-        } else {
-            buzzer_->playError();
-        }
+    // OVC + Overtemp sont consideres "latch" : pattern sonore specifique.
+    if (code == ErrorCode::E01_OvcLatched || code == ErrorCode::E02_OverTemp) {
+        BUZZ->playLatch();
+    } else {
+        BUZZ->playError();
     }
 }
 

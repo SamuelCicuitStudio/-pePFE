@@ -1,4 +1,4 @@
-#include "controle/Buzzer.h"
+#include <Buzzer.hpp>
 
 // -----------------------------------------------------------------------------
 // Buzzer: implementation simple basee sur une file + une tache.
@@ -6,6 +6,12 @@
 //  - ne jamais bloquer la logique principale (Device, WiFi)
 //  - serialiser les patterns audio
 // -----------------------------------------------------------------------------
+
+namespace {
+constexpr uint8_t kBuzzerPwmChannel = 6;
+constexpr uint32_t kBuzzerPwmBaseFreq = 4000;
+constexpr uint8_t kBuzzerPwmResolution = 8;
+}
 
 Buzzer* Buzzer::inst_ = nullptr;
 
@@ -22,6 +28,10 @@ void Buzzer::begin() {
     // Lecture de l'activation depuis NVS
     enabled_ = CONF->GetBool(KEY_BUZZ_EN, DEFAULT_BUZZER_ENABLED);
 
+    ledcSetup(kBuzzerPwmChannel, kBuzzerPwmBaseFreq, kBuzzerPwmResolution);
+    ledcAttachPin(PIN_BUZZER, kBuzzerPwmChannel);
+    ledcWriteTone(kBuzzerPwmChannel, 0);
+
     if (!mutex_) mutex_ = xSemaphoreCreateMutex();
     if (!queue_) queue_ = xQueueCreate(10, sizeof(Pattern));
 
@@ -34,11 +44,17 @@ void Buzzer::begin() {
 void Buzzer::setEnabled(bool on) {
     enabled_ = on;
     CONF->PutBool(KEY_BUZZ_EN, on);
+    if (!on) {
+        ledcWriteTone(kBuzzerPwmChannel, 0);
+        digitalWrite(PIN_BUZZER, LOW);
+    }
 }
 
 bool Buzzer::isEnabled() const {
     return enabled_;
 }
+
+void Buzzer::bip() { enqueue(Pattern::Command); }
 
 void Buzzer::playWarn() { enqueue(Pattern::Warn); }
 void Buzzer::playError() { enqueue(Pattern::Error); }
@@ -46,6 +62,7 @@ void Buzzer::playLatch() { enqueue(Pattern::Latch); }
 void Buzzer::playClientConnect() { enqueue(Pattern::ClientConnect); }
 void Buzzer::playClientDisconnect() { enqueue(Pattern::ClientDisconnect); }
 void Buzzer::playAuthFail() { enqueue(Pattern::AuthFail); }
+void Buzzer::playCommand() { enqueue(Pattern::Command); }
 
 void Buzzer::enqueue(Pattern p) {
     if (!enabled_ || !queue_) return;
@@ -72,7 +89,7 @@ void Buzzer::taskLoop_() {
         if (xQueueReceive(queue_, &p, portMAX_DELAY) == pdTRUE) {
             play_(p);
             // Petite pause pour eviter un "clic" entre patterns.
-            buzzOff_(10);
+            silence_(10);
         }
     }
 }
@@ -81,43 +98,47 @@ void Buzzer::play_(Pattern p) {
     if (!enabled_) return;
 
     switch (p) {
+        case Pattern::Command:
+            playTone_(1000, 80); silence_(80);
+            break;
         case Pattern::Warn:
             // 2 bips courts
-            buzzOn_(100); buzzOff_(100);
-            buzzOn_(100); buzzOff_(100);
+            playTone_(1000, 100); silence_(100);
+            playTone_(1000, 100); silence_(100);
             break;
         case Pattern::Error:
             // 3 bips longs
             for (int i = 0; i < 3; ++i) {
-                buzzOn_(400); buzzOff_(200);
+                playTone_(400, 400); silence_(200);
             }
             break;
         case Pattern::Latch:
             // 1 long + 2 courts
-            buzzOn_(400); buzzOff_(150);
-            buzzOn_(100); buzzOff_(150);
-            buzzOn_(100); buzzOff_(150);
+            playTone_(400, 400); silence_(150);
+            playTone_(1000, 100); silence_(150);
+            playTone_(1000, 100); silence_(150);
             break;
         case Pattern::ClientConnect:
-            buzzOn_(120); buzzOff_(60);
+            playTone_(1200, 120); silence_(60);
             break;
         case Pattern::ClientDisconnect:
-            buzzOn_(80); buzzOff_(80);
-            buzzOn_(80); buzzOff_(80);
+            playTone_(900, 80); silence_(80);
+            playTone_(900, 80); silence_(80);
             break;
         case Pattern::AuthFail:
-            buzzOn_(400); buzzOff_(200);
+            playTone_(400, 400); silence_(200);
             break;
     }
 }
 
-void Buzzer::buzzOn_(uint32_t ms) {
-    // NOTE: version PWM/LEDC possible, ici on reste en digitalWrite simple.
-    digitalWrite(PIN_BUZZER, HIGH);
-    vTaskDelay(pdMS_TO_TICKS(ms));
+void Buzzer::playTone_(uint16_t freqHz, uint32_t durationMs) {
+    if (!enabled_) return;
+    ledcWriteTone(kBuzzerPwmChannel, freqHz);
+    vTaskDelay(pdMS_TO_TICKS(durationMs));
+    ledcWriteTone(kBuzzerPwmChannel, 0);
 }
 
-void Buzzer::buzzOff_(uint32_t ms) {
-    digitalWrite(PIN_BUZZER, LOW);
+void Buzzer::silence_(uint32_t ms) {
+    ledcWriteTone(kBuzzerPwmChannel, 0);
     vTaskDelay(pdMS_TO_TICKS(ms));
 }

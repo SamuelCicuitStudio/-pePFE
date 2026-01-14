@@ -21,7 +21,6 @@
  *  - Journal memo (optionnel) en RAM pour exporter des logs via HTTP.
  */
 
-#include "systeme/Config.h"
 
 // ===================== Activation debug globale =====================
 
@@ -32,7 +31,11 @@
 #ifndef SERIAL_BAUD_RATE
 #define SERIAL_BAUD_RATE 250000 ///< Vitesse serie par defaut pour Debug::begin()
 #endif
-
+#include <Arduino.h>
+#include <pgmspace.h>
+#include <stdarg.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 // ===================== API debug thread-safe =====================
 
 namespace Debug {

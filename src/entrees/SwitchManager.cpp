@@ -1,7 +1,4 @@
-#include "communication/entrees/SwitchManager.h"
-
-SwitchManager::SwitchManager(DeviceTransport* transport)
-    : transport_(transport) {}
+#include <SwitchManager.hpp>
 
 void SwitchManager::begin() {
     // GPIO0 avec pull-up interne -> lecture stable sans resistance externe.
@@ -37,7 +34,7 @@ void SwitchManager::taskLoop_() {
 
         if (pressed && !longTriggered_ && (now - pressStartMs_ >= BUTTON_LONG_RESET_MS)) {
             // Reset force
-            if (transport_) transport_->reset();
+            if (DEVTRAN) DEVTRAN->reset();
             longTriggered_ = true;
         }
 
@@ -46,7 +43,7 @@ void SwitchManager::taskLoop_() {
             const uint32_t heldMs = now - pressStartMs_;
             if (heldMs < BUTTON_LONG_RESET_MS) {
                 // Appui court : toggle marche/arret.
-                if (transport_) transport_->toggle();
+                if (DEVTRAN) DEVTRAN->toggle();
             }
         }
 

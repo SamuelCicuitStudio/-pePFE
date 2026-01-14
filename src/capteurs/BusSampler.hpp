@@ -16,10 +16,10 @@
 #ifndef BUS_SAMPLER_H
 #define BUS_SAMPLER_H
 
-#include "systeme/Config.h"
-#include "capteurs/CurrentSensor.h"
-#include "capteurs/TempSensor.h"
-#include "capteurs/Bme280Sensor.h"
+#include <Config.hpp>
+#include <CurrentSensor.hpp>
+#include <TempSensor.hpp>
+#include <Bme280Sensor.hpp>
 
 class BusSampler {
 public:

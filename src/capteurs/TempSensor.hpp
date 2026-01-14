@@ -9,7 +9,7 @@
 
 #include <Arduino.h>
 #include <OneWire.h>
-#include "systeme/Config.h"
+#include <Config.hpp>
 
 class Ds18b20Sensor {
 public:

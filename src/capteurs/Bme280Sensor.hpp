@@ -19,7 +19,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_BME280.h>
-#include "systeme/Config.h"
+#include <Config.hpp>
 
 class Bme280Sensor {
 public:

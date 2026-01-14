@@ -1,5 +1,5 @@
 /**************************************************************
- *  Gestion NVS (Preferences) - thread-safe
+ *  Gestion NVS (Preferences) - ecritures protegees
  *
  *  Commentaires en francais, ASCII uniquement.
  **************************************************************/
@@ -7,8 +7,8 @@
 #define NVS_MANAGER_H
 
 #include <Preferences.h>
-#include "systeme/Config.h"
-#include "systeme/Utils.h"
+#include <Config.hpp>
+#include <Utils.hpp>
 
 class NVS {
 public:
@@ -18,8 +18,8 @@ public:
 
     // Cycle de vie
     // begin():
-    // - ouvre Preferences en lecture
-    // - cree les cles manquantes avec valeurs par defaut
+    // - ouvre Preferences en lecture/ecriture
+    // - applique les valeurs par defaut si KEY_RESET_FLAG est true
     // IMPORTANT: begin() doit etre appele au boot AVANT d'utiliser CONF.
     void begin();
 
@@ -37,7 +37,7 @@ public:
     void PutString (const char* key, const String& value);
 
     // Lecture
-    // API thread-safe: toute lecture est protegee par mutex + ouverture RO.
+    // Lectures sans semaphore, Preferences reste ouverte en RW.
     bool     GetBool   (const char* key, bool defaultValue);
     int      GetInt    (const char* key, int defaultValue);
     uint32_t GetUInt   (const char* key, uint32_t defaultValue);
@@ -50,7 +50,14 @@ public:
     void RemoveKey(const char* key);
     // ClearAll: efface toute la partition (danger).
     void ClearAll();
-
+    // -----------------------------------------------------------------
+    // System helpers (reboot, countdown, powerdown)
+    // -----------------------------------------------------------------
+    void RestartSysDelay(unsigned long delayTime);
+    void RestartSysDelayDown(unsigned long delayTime);
+    void simulatePowerDown();
+    static inline void sleepMs_(uint32_t ms);
+    void CountdownDelay(unsigned long delayTime);
 private:
     NVS();
     ~NVS();
@@ -58,7 +65,6 @@ private:
     NVS& operator=(const NVS&) = delete;
 
     void ensureDefaults_();
-    void ensureOpenRO_();
     void ensureOpenRW_();
     void lock_();
     void unlock_();

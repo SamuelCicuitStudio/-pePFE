@@ -7,10 +7,10 @@
  *  Phone       : +216 54 429 793
  **************************************************************/
 
-#include "services/SleepTimer.h"
-#include "systeme/Config.h"
-#include "systeme/DeviceTransport.h"
-#include "systeme/Utils.h"
+#include <SleepTimer.hpp>
+#include <Config.hpp>
+#include <DeviceTransport.hpp>
+#include <Utils.hpp>
 #include <esp_sleep.h>
 #include <WiFi.h>
 
@@ -18,7 +18,7 @@
 SleepTimer* SleepTimer::s_instance = nullptr;
 
 void SleepTimer::Init() {
-    (void)SleepTimer::Get();
+    (void)SLEEP;
 }
 
 SleepTimer* SleepTimer::Get() {

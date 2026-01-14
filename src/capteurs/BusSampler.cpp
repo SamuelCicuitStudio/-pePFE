@@ -1,4 +1,4 @@
-#include "capteurs/BusSampler.h"
+#include <BusSampler.hpp>
 
 BusSampler* BusSampler::Get() {
     // Singleton local (stack static) : pas d'allocation dynamique.

@@ -1,9 +1,11 @@
-#include "services/NVSManager.h"
-
+#include <NVSManager.hpp>
+#include <esp_err.h>
+#include <esp_sleep.h>
+#include <esp_task_wdt.h>
 // -----------------------------------------------------------------------------
 // BUT:
 //  - Centraliser les parametres persistants (Preferences / NVS ESP32)
-//  - Garantir un acces thread-safe (mutex recursif)
+//  - Garantir un acces thread-safe pour les ecritures (mutex recursif)
 //  - S'assurer que les cles necessaires existent (valeurs par defaut au boot)
 //
 // IMPORTANT (convention d'architecture):
@@ -17,7 +19,7 @@
 NVS* NVS::s_instance = nullptr;
 
 void NVS::Init() {
-    (void)NVS::Get();
+    (void)CONF;
 }
 
 NVS* NVS::Get() {
@@ -54,15 +56,6 @@ void NVS::lock_() {
 void NVS::unlock_() {
     if (mutex_) {
         xSemaphoreGiveRecursive(mutex_);
-    }
-}
-
-void NVS::ensureOpenRO_() {
-    if (!is_open_) {
-        // Ouvre en lecture seule: securise pour les lectures multi-taches.
-        preferences.begin(namespaceName, true);
-        is_open_ = true;
-        open_rw_ = false;
     }
 }
 
@@ -153,6 +146,7 @@ void NVS::ensureDefaults_() {
 
     // Exploitation
     ensureBool(KEY_RELAY_LAST, false);
+    ensureBool(KEY_RESET_FLAG, true);
     ensureUInt(KEY_SAMPLING_HZ, DEFAULT_SAMPLING_HZ);
     ensureFloat(KEY_MOTOR_VCC, DEFAULT_MOTOR_VCC_V);
     ensureBool(KEY_BUZZ_EN, DEFAULT_BUZZER_ENABLED);
@@ -189,9 +183,18 @@ void NVS::ensureDefaults_() {
 void NVS::begin() {
     DEBUG_PRINTLN("[NVS] Demarrage Preferences");
     lock_();
-    ensureOpenRO_();
+    ensureOpenRW_();
     unlock_();
-    ensureDefaults_();
+
+    bool resetFlag = GetBool(KEY_RESET_FLAG, true);
+    if (resetFlag) {
+         DEBUG_PRINTLN("[NVS]  setting defaults");
+        ensureDefaults_();
+        PutBool(KEY_RESET_FLAG, false);
+        RestartSysDelayDown(3000);
+        
+    };
+     DEBUG_PRINTLN("[NVS] Use default!");
 }
 
 void NVS::end() {
@@ -253,51 +256,33 @@ void NVS::PutString(const char* key, const String& value) {
 // Lectures
 // -----------------------------------------------------------------------------
 bool NVS::GetBool(const char* key, bool defaultValue) {
-    lock_();
-    ensureOpenRO_();
-    bool v = preferences.getBool(key, defaultValue);
-    unlock_();
-    return v;
+    ensureOpenRW_();
+    return preferences.getBool(key, defaultValue);
 }
 
 int NVS::GetInt(const char* key, int defaultValue) {
-    lock_();
-    ensureOpenRO_();
-    int v = preferences.getInt(key, defaultValue);
-    unlock_();
-    return v;
+    ensureOpenRW_();
+    return preferences.getInt(key, defaultValue);
 }
 
 uint32_t NVS::GetUInt(const char* key, uint32_t defaultValue) {
-    lock_();
-    ensureOpenRO_();
-    uint32_t v = preferences.getUInt(key, defaultValue);
-    unlock_();
-    return v;
+    ensureOpenRW_();
+    return preferences.getUInt(key, defaultValue);
 }
 
 uint64_t NVS::GetULong64(const char* key, uint64_t defaultValue) {
-    lock_();
-    ensureOpenRO_();
-    uint64_t v = preferences.getULong64(key, defaultValue);
-    unlock_();
-    return v;
+    ensureOpenRW_();
+    return preferences.getULong64(key, defaultValue);
 }
 
 float NVS::GetFloat(const char* key, float defaultValue) {
-    lock_();
-    ensureOpenRO_();
-    float v = preferences.getFloat(key, defaultValue);
-    unlock_();
-    return v;
+    ensureOpenRW_();
+    return preferences.getFloat(key, defaultValue);
 }
 
 String NVS::GetString(const char* key, const String& defaultValue) {
-    lock_();
-    ensureOpenRO_();
-    String v = preferences.getString(key, defaultValue);
-    unlock_();
-    return v;
+    ensureOpenRW_();
+    return preferences.getString(key, defaultValue);
 }
 
 // -----------------------------------------------------------------------------
@@ -317,4 +302,72 @@ void NVS::ClearAll() {
     ensureOpenRW_();
     preferences.clear();
     unlock_();
+}
+inline void NVS::sleepMs_(uint32_t ms) {
+    if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+        vTaskDelay(pdMS_TO_TICKS(ms));
+    } else {
+        delay(ms);
+    }
+}
+
+// ======================================================
+// System helpers / reboot paths
+// ======================================================
+void NVS::RestartSysDelayDown(unsigned long delayTime) {
+    unsigned long interval = delayTime / 30;
+    DEBUGGSTART();
+    DEBUG_PRINTLN("###########################################################");
+    DEBUG_PRINTLN("#           Restarting the Device in: " + String(delayTime / 1000)+ " Sec              #");
+    DEBUG_PRINTLN("###########################################################");
+    DEBUGGSTOP() ;
+    for (int i = 0; i < 30; i++) {
+        DEBUG_PRINT("#");
+        sleepMs_(interval);
+        esp_task_wdt_reset();
+    }
+    DEBUG_PRINTLN();
+    DEBUG_PRINTLN("[NVS] Restarting now...");
+    DEBUGGSTOP() ;
+    simulatePowerDown();
+}
+
+void NVS::RestartSysDelay(unsigned long delayTime) {
+    unsigned long interval = delayTime / 30;
+    DEBUGGSTART() ;
+    DEBUG_PRINTLN("###########################################################");
+    DEBUG_PRINTLN("#           Restarting the Device in: " + String(delayTime / 1000)+ " Sec              #");
+    DEBUG_PRINTLN("###########################################################");
+    DEBUGGSTOP() ;
+    for (int i = 0; i < 30; i++) {
+        DEBUG_PRINT("#");
+        sleepMs_(interval);
+        esp_task_wdt_reset();
+    }
+    DEBUG_PRINTLN();
+    DEBUG_PRINTLN("[NVS] Restarting now...");
+    
+    ESP.restart();
+}
+
+void NVS::CountdownDelay(unsigned long delayTime) {
+    unsigned long interval = delayTime / 32;
+    DEBUGGSTART() ;
+    DEBUG_PRINTLN("###########################################################");
+    DEBUG_PRINT("[NVS] Waiting User Action: ");
+    DEBUG_PRINT(delayTime / 1000);
+    DEBUG_PRINTLN(" Sec");
+    DEBUGGSTOP() ;
+    for (int i = 0; i < 32; i++) {
+        DEBUG_PRINT("#");
+        sleepMs_(interval);
+        esp_task_wdt_reset();
+    }
+    DEBUG_PRINTLN();
+    
+}
+
+void NVS::simulatePowerDown() {
+    esp_sleep_enable_timer_wakeup(1000000); // 1s
+    esp_deep_sleep_start();
 }

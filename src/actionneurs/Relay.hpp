@@ -4,7 +4,7 @@
 #ifndef RELAY_H
 #define RELAY_H
 
-#include "systeme/Config.h"
+#include <Config.hpp>
 
 class Relay {
 public:

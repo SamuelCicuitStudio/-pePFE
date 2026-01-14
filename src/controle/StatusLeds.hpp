@@ -6,7 +6,7 @@
 #ifndef STATUS_LEDS_H
 #define STATUS_LEDS_H
 
-#include "systeme/Config.h"
+#include <Config.hpp>
 
 class StatusLeds {
 public:
@@ -22,6 +22,9 @@ public:
     // Clignotement court pour commande acceptee
     // (ignore si un code d'alerte est en cours)
     void notifyCommand();
+
+    // Animation simple au demarrage (les 2 LEDs).
+    void bootAnimation();
 
     // Code d'alerte (warning/error)
     // Le code est typiquement 1..9 (Wxx/Exx).

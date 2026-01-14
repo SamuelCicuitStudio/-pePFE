@@ -167,6 +167,15 @@ body {
   filter: drop-shadow(0 0 4px rgba(255, 120, 120, 0.3));
 }
 
+.side-btn-reset {
+  color: #ffd36a;
+  border-color: rgba(255, 211, 106, 0.28);
+}
+
+.side-btn-reset .icon {
+  filter: drop-shadow(0 0 4px rgba(255, 211, 106, 0.3));
+}
+
 .side-btn.muted {
   color: rgba(200, 200, 200, 0.9);
   border-color: rgba(255, 255, 255, 0.14);

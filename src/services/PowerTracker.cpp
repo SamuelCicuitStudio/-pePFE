@@ -1,10 +1,10 @@
-#include "services/PowerTracker.h"
+#include <PowerTracker.hpp>
 
 #include <FS.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
 #include <math.h>
-#include "capteurs/BusSampler.h"
+#include <BusSampler.hpp>
 
 // -----------------------------------------------------------------------------
 // PowerTracker (RAM uniquement) :

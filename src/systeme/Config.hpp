@@ -33,7 +33,7 @@
 // ADC (capteur courant ACS712)
 #define PIN_CURRENT_ADC      1     // GPIO ADC
 // Bouton Boot/User (marche/arret + reset long)
-#define PIN_BUTTON           0     // GPIO bouton
+#define PIN_BUTTON           3     // GPIO bouton
 
 // Polarite du relais:
 // - true  : HIGH = ON,  LOW = OFF
@@ -51,8 +51,8 @@
 #define DEFAULT_AP_PASS      "12345678"  // 8+ caracteres requis par WiFi.softAP
 
 // STA par defaut (vide => pas de tentative STA)
-#define DEFAULT_STA_SSID     ""
-#define DEFAULT_STA_PASS     ""
+#define DEFAULT_STA_SSID     "pboard"
+#define DEFAULT_STA_PASS     "1234567890"
 
 // Versions (exposees via /api/info)
 #define DEVICE_SW_VERSION    "0.1.0"
@@ -253,6 +253,7 @@ enum class ErrorCode : uint16_t {
 #define KEY_LATCH_TEMP    "TLAT"
 
 #define KEY_RELAY_LAST    "RLYLS"
+#define KEY_RESET_FLAG    "RSTFL"
 #define KEY_SAMPLING_HZ   "SMPHZ"
 #define KEY_MOTOR_VCC     "MVCC"
 #define KEY_BUZZ_EN       "BUZEN"

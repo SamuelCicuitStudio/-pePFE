@@ -1,21 +1,18 @@
-#include "communication/reseau/WiFiManager.h"
+#include <WiFiManager.hpp>
+#include <Utils.hpp>
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
 #include <SPIFFS.h>
-#include "communication/reseau/WiFiEndpoints.h"
+#include <WiFiEndpoints.hpp>
 
 WiFiManager* WiFiManager::inst_ = nullptr;
 
-void WiFiManager::Init(Device* device,
-                       DeviceTransport* transport,
-                       BusSampler* sampler,
-                       SessionHistory* sessions,
+void WiFiManager::Init(SessionHistory* sessions,
                        EventLog* events,
-                       RTCManager* rtc,
-                       Buzzer* buzzer) {
+                       RTCManager* rtc) {
     // Singleton : injection des dependances une seule fois.
     if (!inst_) {
-        inst_ = new WiFiManager(device, transport, sampler, sessions, events, rtc, buzzer);
+        inst_ = new WiFiManager(sessions, events, rtc);
     }
 }
 
@@ -23,20 +20,12 @@ WiFiManager* WiFiManager::Get() {
     return inst_;
 }
 
-WiFiManager::WiFiManager(Device* device,
-                         DeviceTransport* transport,
-                         BusSampler* sampler,
-                         SessionHistory* sessions,
+WiFiManager::WiFiManager(SessionHistory* sessions,
                          EventLog* events,
-                         RTCManager* rtc,
-                         Buzzer* buzzer)
-    : device_(device),
-      transport_(transport),
-      sampler_(sampler),
-      sessions_(sessions),
+                         RTCManager* rtc)
+    : sessions_(sessions),
       events_(events),
-      rtc_(rtc),
-      buzzer_(buzzer) {}
+      rtc_(rtc) {}
 
 // Convertit l'etat enum en string stable pour l'UI.
 static const char* stateName_(DeviceState s) {
@@ -81,22 +70,6 @@ void WiFiManager::begin() {
     // Worker unique (housekeeping).
     startWorker_();
 
-    // Sons connexion / deconnexion client AP
-    // Note : les events AP sont utiles en mode fallback pour informer l'utilisateur.
-    WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t) {
-        if (!buzzer_) return;
-        if (event == ARDUINO_EVENT_WIFI_AP_STACONNECTED) {
-            buzzer_->playClientConnect();
-        } else if (event == ARDUINO_EVENT_WIFI_AP_STADISCONNECTED) {
-            buzzer_->playClientDisconnect();
-            if (events_) {
-                events_->append(EventLevel::Warning,
-                                static_cast<uint16_t>(WarnCode::W09_ClientGone),
-                                "Client disconnect",
-                                "wifi");
-            }
-        }
-    });
 }
 
 bool WiFiManager::startSta_() {
@@ -168,7 +141,7 @@ bool WiFiManager::requireAuth_(AsyncWebServerRequest* request) {
                         "Auth fail",
                         "http");
     }
-    if (buzzer_) buzzer_->playAuthFail();
+    BUZZ->playAuthFail();
 
     request->requestAuthentication();
     return false;
@@ -277,7 +250,8 @@ void WiFiManager::workerTask_() {
 void WiFiManager::handleApiStatus_(AsyncWebServerRequest* request) {
     // Snapshot centralise (coherent) -> JSON pour l'UI.
     SystemSnapshot snap{};
-    if (!transport_ || !transport_->getSnapshot(snap)) {
+    DeviceTransport* transport = DEVTRAN;
+    if (!transport || !transport->getSnapshot(snap)) {
         request->send(503, CT_APP_JSON, "{\"error\":\"no_snapshot\"}");
         return;
     }
@@ -312,7 +286,7 @@ void WiFiManager::handleApiStatus_(AsyncWebServerRequest* request) {
 
 void WiFiManager::handleApiHistory_(AsyncWebServerRequest* request) {
     // Historique de mesures (800 max en RAM, on renvoie une fenetre).
-    if (!sampler_) {
+    if (!BUS_SAMPLER) {
         request->send(503, CT_APP_JSON, "{\"error\":\"no_sampler\"}");
         return;
     }
@@ -326,7 +300,7 @@ void WiFiManager::handleApiHistory_(AsyncWebServerRequest* request) {
     // Note memoire : allocation temporaire (max 200 samples).
     BusSampler::Sample* buf = new BusSampler::Sample[maxN];
     uint32_t newSeq = since;
-    size_t n = sampler_->getHistorySince(since, buf, maxN, newSeq);
+    size_t n = BUS_SAMPLER->getHistorySince(since, buf, maxN, newSeq);
 
     // Estimation capacity JSON (evite un doc trop petit).
     const size_t cap = 512 + (maxN * 64);
@@ -404,6 +378,9 @@ void WiFiManager::handleApiConfigGet_(AsyncWebServerRequest* request) {
     doc["motor_vcc_v"] = CONF->GetFloat(KEY_MOTOR_VCC, DEFAULT_MOTOR_VCC_V);
     doc["sampling_hz"] = CONF->GetUInt(KEY_SAMPLING_HZ, DEFAULT_SAMPLING_HZ);
     doc["buzzer_enabled"] = CONF->GetBool(KEY_BUZZ_EN, DEFAULT_BUZZER_ENABLED);
+    doc["current_zero_mv"] = CONF->GetFloat(KEY_CUR_ZERO, DEFAULT_CURRENT_ZERO_MV);
+    doc["current_sens_mv_a"] = CONF->GetFloat(KEY_CUR_SENS, DEFAULT_CURRENT_SENS_MV_A);
+    doc["current_input_scale"] = CONF->GetFloat(KEY_CUR_SCALE, DEFAULT_CURRENT_INPUT_SCALE);
 
     doc["wifi_mode"] = CONF->GetInt(KEY_WIFI_MODE, 0);
     doc["sta_ssid"] = CONF->GetString(KEY_STA_SSID, "");
@@ -416,8 +393,9 @@ void WiFiManager::handleApiConfigGet_(AsyncWebServerRequest* request) {
 
 void WiFiManager::handleApiConfigPost_(AsyncWebServerRequest* request, JsonVariant& json) {
     // Applique une mise a jour partielle de config.
-    // Seul Device ecrit la NVS : on appelle device_->applyConfig().
-    if (!device_) {
+    // Seul Device ecrit la NVS : on appelle device->applyConfig().
+    Device* device = DEVICE;
+    if (!device) {
         request->send(500, CT_APP_JSON, "{\"error\":\"no_device\"}");
         return;
     }
@@ -503,8 +481,8 @@ void WiFiManager::handleApiConfigPost_(AsyncWebServerRequest* request, JsonVaria
         cfg.wifiMode = (mode == "ap") ? WiFiModeSetting::Ap : WiFiModeSetting::Sta;
     }
 
-    device_->applyConfig(cfg);
-    device_->notifyCommand();
+    device->applyConfig(cfg);
+    device->notifyCommand();
 
     request->send(200, CT_APP_JSON, "{\"ok\":true}");
 }
@@ -514,20 +492,27 @@ void WiFiManager::handleApiControl_(AsyncWebServerRequest* request, JsonVariant&
     JsonObject obj = json.as<JsonObject>();
     String action = obj["action"] | "";
     action.toLowerCase();
+    DEBUG_PRINTLN(String("[HTTP] /api/control action: ") + action);
 
     bool ok = false;
     const bool isNoop = (action == "noop");
-    if (transport_) {
-        if (action == "relay_on") ok = transport_->setRelay(true);
-        else if (action == "relay_off") ok = transport_->setRelay(false);
-        else if (action == "start") ok = transport_->start();
-        else if (action == "stop") ok = transport_->stop();
-        else if (action == "clear_fault") ok = transport_->clearFault();
+    DeviceTransport* transport = DEVTRAN;
+    if (transport) {
+        if (action == "relay_on") ok = transport->setRelay(true);
+        else if (action == "relay_off") ok = transport->setRelay(false);
+        else if (action == "start") ok = transport->start();
+        else if (action == "stop") ok = transport->stop();
+        else if (action == "clear_fault") ok = transport->clearFault();
+        else if (action == "reset") ok = true;
     }
     if (isNoop) ok = true;
 
-    if (ok && device_ && !isNoop) device_->notifyCommand();
+    if (ok && DEVICE && !isNoop && action != "reset") DEVICE->notifyCommand();
     request->send(200, CT_APP_JSON, ok ? "{\"ok\":true}" : "{\"ok\":false}");
+
+    if (ok && action == "reset") {
+        CONF->RestartSysDelay(1000);
+    }
 }
 
 void WiFiManager::handleApiCalibrate_(AsyncWebServerRequest* request, JsonVariant& json) {
@@ -537,8 +522,8 @@ void WiFiManager::handleApiCalibrate_(AsyncWebServerRequest* request, JsonVarian
     action.toLowerCase();
 
     if (action == "current_zero") {
-        if (device_) device_->calibrateCurrentZero();
-        if (device_) device_->notifyCommand();
+        if (DEVICE) DEVICE->calibrateCurrentZero();
+        if (DEVICE) DEVICE->notifyCommand();
         request->send(200, CT_APP_JSON, "{\"ok\":true}");
         return;
     }
@@ -547,8 +532,8 @@ void WiFiManager::handleApiCalibrate_(AsyncWebServerRequest* request, JsonVarian
         float zeroMv = obj["zero_mv"] | DEFAULT_CURRENT_ZERO_MV;
         float sensMv = obj["sens_mv_a"] | DEFAULT_CURRENT_SENS_MV_A;
         float scale = obj["input_scale"] | DEFAULT_CURRENT_INPUT_SCALE;
-        if (device_) device_->setCurrentCalibration(zeroMv, sensMv, scale);
-        if (device_) device_->notifyCommand();
+        if (DEVICE) DEVICE->setCurrentCalibration(zeroMv, sensMv, scale);
+        if (DEVICE) DEVICE->notifyCommand();
         request->send(200, CT_APP_JSON, "{\"ok\":true}");
         return;
     }
@@ -567,7 +552,7 @@ void WiFiManager::handleApiRtc_(AsyncWebServerRequest* request, JsonVariant& jso
     if (obj.containsKey("epoch")) {
         uint64_t epoch = obj["epoch"].as<uint64_t>();
         rtc_->setUnixTime(epoch);
-        if (device_) device_->notifyCommand();
+        if (DEVICE) DEVICE->notifyCommand();
         request->send(200, CT_APP_JSON, "{\"ok\":true}");
         return;
     }
@@ -581,7 +566,7 @@ void WiFiManager::handleApiRtc_(AsyncWebServerRequest* request, JsonVariant& jso
 
     if (year > 0) {
         rtc_->setRTCTime(year, month, day, hour, minute, second);
-        if (device_) device_->notifyCommand();
+        if (DEVICE) DEVICE->notifyCommand();
         request->send(200, CT_APP_JSON, "{\"ok\":true}");
         return;
     }
@@ -592,8 +577,9 @@ void WiFiManager::handleApiRtc_(AsyncWebServerRequest* request, JsonVariant& jso
 void WiFiManager::handleApiRunTimer_(AsyncWebServerRequest* request, JsonVariant& json) {
     // Marche temporisee (secondes).
     uint32_t seconds = json["seconds"] | 0;
-    bool ok = transport_ ? transport_->timedRun(seconds) : false;
-    if (ok && device_) device_->notifyCommand();
+    DeviceTransport* transport = DEVTRAN;
+    bool ok = transport ? transport->timedRun(seconds) : false;
+    if (ok && DEVICE) DEVICE->notifyCommand();
     request->send(200, CT_APP_JSON, ok ? "{\"ok\":true}" : "{\"ok\":false}");
 }
 

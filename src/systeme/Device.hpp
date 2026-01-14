@@ -22,18 +22,18 @@
 #ifndef DEVICE_H
 #define DEVICE_H
 
-#include "systeme/Config.h"
-#include "systeme/StatusSnapshot.h"
-#include "actionneurs/Relay.h"
-#include "controle/StatusLeds.h"
-#include "controle/Buzzer.h"
-#include "capteurs/CurrentSensor.h"
-#include "capteurs/TempSensor.h"
-#include "capteurs/Bme280Sensor.h"
-#include "capteurs/BusSampler.h"
-#include "services/RTCManager.h"
-#include "services/SessionHistory.h"
-#include "services/EventLog.h"
+#include <Config.hpp>
+#include <StatusSnapshot.hpp>
+#include <Relay.hpp>
+#include <StatusLeds.hpp>
+#include <Buzzer.hpp>
+#include <CurrentSensor.hpp>
+#include <TempSensor.hpp>
+#include <Bme280Sensor.hpp>
+#include <BusSampler.hpp>
+#include <RTCManager.hpp>
+#include <SessionHistory.hpp>
+#include <EventLog.hpp>
 
 class Device {
 public:
@@ -59,11 +59,9 @@ public:
     // Singleton : on injecte les dependances une seule fois pendant setup().
     static void Init(Relay* relay,
                      StatusLeds* leds,
-                     Buzzer* buzzer,
                      Acs712Sensor* current,
                      Ds18b20Sensor* ds18,
                      Bme280Sensor* bme,
-                     BusSampler* sampler,
                      RTCManager* rtc,
                      SessionHistory* sessions,
                      EventLog* events);
@@ -151,11 +149,9 @@ public:
 private:
     Device(Relay* relay,
            StatusLeds* leds,
-           Buzzer* buzzer,
            Acs712Sensor* current,
            Ds18b20Sensor* ds18,
            Bme280Sensor* bme,
-           BusSampler* sampler,
            RTCManager* rtc,
            SessionHistory* sessions,
            EventLog* events);
@@ -200,11 +196,9 @@ private:
     // pendant toute la duree du firmware.
     Relay* relay_ = nullptr;
     StatusLeds* leds_ = nullptr;
-    Buzzer* buzzer_ = nullptr;
     Acs712Sensor* current_ = nullptr;
     Ds18b20Sensor* ds18_ = nullptr;
     Bme280Sensor* bme_ = nullptr;
-    BusSampler* sampler_ = nullptr;
     RTCManager* rtc_ = nullptr;
     SessionHistory* sessions_ = nullptr;
     EventLog* events_ = nullptr;
@@ -278,5 +272,7 @@ private:
 
     static Device* inst_;
 };
+
+#define DEVICE Device::Get()
 
 #endif // DEVICE_H

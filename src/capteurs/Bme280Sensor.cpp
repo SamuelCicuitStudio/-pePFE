@@ -1,4 +1,4 @@
-#include "capteurs/Bme280Sensor.h"
+#include <Bme280Sensor.hpp>
 
 Bme280Sensor::Bme280Sensor(TwoWire* wire)
     : wire_(wire) {}

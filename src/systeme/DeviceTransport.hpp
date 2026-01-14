@@ -15,17 +15,14 @@
 #ifndef DEVICE_TRANSPORT_H
 #define DEVICE_TRANSPORT_H
 
-#include "systeme/Device.h"
+#include <Device.hpp>
 
 class DeviceTransport {
 public:
     // Singleton simple (pas de destruction a l'arret).
     static DeviceTransport* Get();
 
-    // Attache une instance Device (obligatoire avant utilisation).
-    void attach(Device* dev);
-
-    // API de commandes (retourne false si Device non attache ou file pleine).
+    // API de commandes (retourne false si Device non initialise ou file pleine).
     bool start();
     bool stop();
     bool toggle();
@@ -41,8 +38,6 @@ public:
 private:
     DeviceTransport() = default;
 
-    // Pointeur non-possede : Device vit pendant toute la duree du firmware.
-    Device* dev_ = nullptr;
     static DeviceTransport* inst_;
 };
 

@@ -689,6 +689,9 @@
         motor_vcc_v: config.motor_vcc_v,
         sampling_hz: config.sampling_hz,
         buzzer_enabled: config.buzzer_enabled,
+        current_zero_mv: calibration.zero_mv,
+        current_sens_mv_a: calibration.sens_mv_a,
+        current_input_scale: calibration.input_scale,
         wifi_mode: config.wifi_mode,
         sta_ssid: config.sta_ssid,
         ap_ssid: config.ap_ssid

@@ -1,4 +1,4 @@
-#include "actionneurs/Relay.h"
+#include <Relay.hpp>
 
 // -----------------------------------------------------------------------------
 // Implementation Relay

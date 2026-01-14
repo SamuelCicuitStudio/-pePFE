@@ -1,4 +1,4 @@
-#include "controle/StatusLeds.h"
+#include <StatusLeds.hpp>
 
 void StatusLeds::begin() {
     // Configuration des deux LEDs
@@ -43,6 +43,31 @@ void StatusLeds::notifyCommand() {
     if (busy) return;
 
     blinkOnce_(60, 60);
+}
+
+void StatusLeds::bootAnimation() {
+    bool prevOvertemp = false;
+    if (lock_()) {
+        prevOvertemp = overtempOn_;
+        busy_ = true;
+        unlock_();
+    }
+
+    for (int i = 0; i < 3; ++i) {
+        digitalWrite(PIN_LED_CMD, HIGH);
+        digitalWrite(PIN_LED_OVERTEMP, HIGH);
+        vTaskDelay(pdMS_TO_TICKS(80));
+        digitalWrite(PIN_LED_CMD, LOW);
+        digitalWrite(PIN_LED_OVERTEMP, LOW);
+        vTaskDelay(pdMS_TO_TICKS(80));
+    }
+
+    digitalWrite(PIN_LED_OVERTEMP, prevOvertemp ? HIGH : LOW);
+
+    if (lock_()) {
+        busy_ = false;
+        unlock_();
+    }
 }
 
 void StatusLeds::enqueueAlert(EventLevel level, uint16_t code) {
