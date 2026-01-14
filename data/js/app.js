@@ -100,13 +100,15 @@
   // Fetch JSON avec gestion auth
   // ==============================
   async function fetchJson(url, options = {}) {
-    const headers = { "Content-Type": "application/json" };
+    const headers = { Accept: "application/json" };
+    if (options.body) headers["Content-Type"] = "application/json";
     if (options.auth) Object.assign(headers, authHeaders());
 
     const res = await fetch(url, {
       method: options.method || "GET",
       headers,
-      body: options.body ? JSON.stringify(options.body) : undefined
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      cache: "no-store"
     });
 
     if (res.status === 401 || res.status === 403) {
@@ -276,6 +278,11 @@
     setLed("ds18Led", !!data.ds18_ok);
     setLed("bmeLed", !!data.bme_ok);
     setLed("adcLed", !!data.adc_ok);
+
+    const relayIndicator = $("relayIndicator");
+    if (relayIndicator) relayIndicator.classList.toggle("on", !!data.relay_on);
+    const relayStateText = $("relayStateText");
+    if (relayStateText) relayStateText.textContent = data.relay_on ? "ON" : "OFF";
 
     setText("ageMs", `age: ${data.age_ms || 0} ms`);
     setStateDot(data.state, data.fault_latched);
@@ -886,6 +893,9 @@
 
     try {
       await fetchJson("/api/config", { method: "POST", auth: true, body: payload });
+      await loadConfig().catch(() => {});
+      await pollStatus().catch(() => {});
+      await pollEvents().catch(() => {});
       if (status) status.textContent = "Configuration OK";
     } catch (err) {
       if (status) status.textContent = `Erreur configuration: ${err.message}`;
@@ -900,7 +910,10 @@
     const status = $("controlStatus");
     const label = actionLabel[action] || action;
     try {
+      if (status) status.textContent = `Envoi: ${label}...`;
       await fetchJson("/api/control", { method: "POST", auth: true, body: { action } });
+      await pollStatus().catch(() => {});
+      await pollEvents().catch(() => {});
       if (status) status.textContent = `OK: ${label}`;
     } catch (err) {
       if (status) status.textContent = `Erreur commande: ${err.message}`;
@@ -912,7 +925,10 @@
     const seconds = parseInt($("runSeconds").value || "0", 10);
     const status = $("controlStatus");
     try {
+      if (status) status.textContent = "Envoi: minuterie...";
       await fetchJson("/api/run_timer", { method: "POST", auth: true, body: { seconds } });
+      await pollStatus().catch(() => {});
+      await pollEvents().catch(() => {});
       if (status) status.textContent = "Minuterie OK";
     } catch (err) {
       if (status) status.textContent = `Erreur minuterie: ${err.message}`;
@@ -946,6 +962,7 @@
     const status = $("calStatus");
     try {
       await fetchJson("/api/calibrate", { method: "POST", auth: true, body: { action: "current_zero" } });
+      await loadConfig().catch(() => {});
       if (status) status.textContent = "Calib zero OK";
     } catch (err) {
       if (status) status.textContent = `Erreur calib: ${err.message}`;
@@ -965,6 +982,7 @@
         auth: true,
         body: { action: "current_sensitivity", zero_mv, sens_mv_a, input_scale }
       });
+      await loadConfig().catch(() => {});
       if (status) status.textContent = "Calib appliquee";
     } catch (err) {
       if (status) status.textContent = `Erreur calib: ${err.message}`;
@@ -979,7 +997,9 @@
     const status = $("rtcStatus");
     const epoch = Math.floor(Date.now() / 1000);
     try {
+      if (status) status.textContent = "Synchronisation...";
       await fetchJson("/api/rtc", { method: "POST", auth: true, body: { epoch } });
+      await pollEvents().catch(() => {});
       if (status) status.textContent = "RTC synchronise (heure navigateur)";
     } catch (err) {
       if (status) status.textContent = `Erreur RTC: ${err.message}`;
@@ -1051,12 +1071,14 @@
     initCharts();
     startClock();
 
-    await loadInfo().catch(() => {});
-    await loadConfig().catch(() => {});
-    await loadSessions().catch(() => {});
-    await pollStatus().catch(() => {});
-    await pollHistory().catch(() => {});
-    await pollEvents().catch(() => {});
+    await Promise.all([
+      loadInfo().catch(() => {}),
+      loadConfig().catch(() => {}),
+      loadSessions().catch(() => {}),
+      pollStatus().catch(() => {}),
+      pollHistory().catch(() => {}),
+      pollEvents().catch(() => {})
+    ]);
 
     setInterval(() => pollStatus().catch(() => {}), 1000);
     setInterval(() => pollHistory().catch(() => {}), 1500);

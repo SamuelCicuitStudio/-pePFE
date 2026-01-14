@@ -49,7 +49,12 @@ Relay* gRelay = nullptr;
 SwitchManager* gSwitch = nullptr;
 
 void WiFiEvent(WiFiEvent_t event) {
-    if (event == ARDUINO_EVENT_WIFI_AP_STACONNECTED) {
+    if (event == ARDUINO_EVENT_WIFI_STA_CONNECTED ||
+        event == ARDUINO_EVENT_WIFI_STA_GOT_IP) {
+        if (BUZZ) BUZZ->playWiFiConnected();
+    } else if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
+        if (BUZZ) BUZZ->playWiFiOff();
+    } else if (event == ARDUINO_EVENT_WIFI_AP_STACONNECTED) {
         if (BUZZ) BUZZ->playClientConnect();
     } else if (event == ARDUINO_EVENT_WIFI_AP_STADISCONNECTED) {
         if (BUZZ) BUZZ->playClientDisconnect();
@@ -115,7 +120,7 @@ void setup() {
     DEBUG_PRINTLN("[BOOT] Initializing Buzzer...");
     (void)BUZZ;
     BUZZ->begin();
-    BUZZ->playWarn();
+    BUZZ->playStartupSequence();
     DEBUG_PRINTLN("[BOOT] Buzzer OK");
 
     DEBUG_PRINTLN("[BOOT] Initializing Relay...");
@@ -218,6 +223,7 @@ void setup() {
     DEBUG_PRINTLN("==================================================");
     DEBUG_PRINTLN("[BOOT] SETUP COMPLETE - SYSTEM READY");
     DEBUG_PRINTLN("==================================================");
+    BUZZ->playSystemReady();
 }
 
 void loop() {

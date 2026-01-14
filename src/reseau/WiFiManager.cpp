@@ -264,6 +264,7 @@ void WiFiManager::handleApiStatus_(AsyncWebServerRequest* request) {
     doc["fault_latched"] = snap.fault_latched;
 
     doc["relay_on"] = snap.relay_on;
+    doc["relay_actual"] = snap.relay_on;
     doc["current_a"] = snap.current_a;
     doc["power_w"] = snap.power_w;
     doc["energy_wh"] = snap.energy_wh;
@@ -508,6 +509,7 @@ void WiFiManager::handleApiControl_(AsyncWebServerRequest* request, JsonVariant&
     if (isNoop) ok = true;
 
     if (ok && DEVICE && !isNoop && action != "reset") DEVICE->notifyCommand();
+    if (!ok && !isNoop) BUZZ->playFailed();
     request->send(200, CT_APP_JSON, ok ? "{\"ok\":true}" : "{\"ok\":false}");
 
     if (ok && action == "reset") {

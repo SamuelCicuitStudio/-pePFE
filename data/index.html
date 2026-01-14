@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Contro - Supervision</title>
-    <link rel="stylesheet" href="css/app.css?v=13" />
+    <link rel="stylesheet" href="css/app.css?v=16" />
     <link rel="icon" href="icons/power-16.png" type="image/png" />
   </head>
   <body>
@@ -200,6 +200,29 @@
       </symbol>
       <symbol id="i-bolt" viewBox="0 0 24 24">
         <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z" fill="currentColor" />
+      </symbol>
+      <symbol id="i-relay" viewBox="0 0 24 24">
+        <path
+          d="M4 8h6M14 8h6M4 16h6M14 16h6"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+        <path
+          d="M10 8c2 0 2 8 0 8"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+        <path
+          d="M14 8c-2 0-2 8 0 8"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
       </symbol>
       <symbol id="i-motor" viewBox="0 0 24 24">
         <path
@@ -645,6 +668,55 @@
                 </div>
                 <div class="gauge-label">Temp moteur (C)</div>
               </div>
+
+              <div
+                class="gauge-card relay-gauge-card relay-indicator"
+                id="relayIndicator"
+                title="Relais (etat)"
+              >
+                <div class="relay-gauge">
+                  <svg class="relay-svg" viewBox="0 0 64 24" aria-hidden="true">
+                    <!-- Contacts -->
+                    <line
+                      class="relay-stroke relay-fixed"
+                      x1="6"
+                      y1="12"
+                      x2="22"
+                      y2="12"
+                    ></line>
+                    <line
+                      class="relay-stroke relay-fixed"
+                      x1="42"
+                      y1="12"
+                      x2="58"
+                      y2="12"
+                    ></line>
+                    <!-- Moving arm (open when OFF, closes when ON) -->
+                    <line
+                      class="relay-stroke relay-arm"
+                      x1="22"
+                      y1="12"
+                      x2="40"
+                      y2="6"
+                    ></line>
+                    <!-- Coil -->
+                    <rect
+                      class="relay-stroke relay-coil"
+                      x="26"
+                      y="6"
+                      width="12"
+                      height="12"
+                      rx="2"
+                    ></rect>
+                    <path
+                      class="relay-stroke relay-coil"
+                      d="M28 9h8M28 12h8M28 15h8"
+                    ></path>
+                  </svg>
+                  <div class="relay-state mono" id="relayStateText">OFF</div>
+                </div>
+                <div class="gauge-label">Relais</div>
+              </div>
             </div>
 
             <div class="metric-row">
@@ -1066,7 +1138,7 @@
       </main>
     </div>
 
-    <script src="js/app.js?v=13"></script>
+    <script src="js/app.js?v=17"></script>
 
     <!-- Pour activer le mock en local: <script src="js/mock.js"></script> -->
   </body>

@@ -12,6 +12,20 @@ public:
     enum class Pattern : uint8_t {
         // Commande acceptee (bip court)
         Command,
+        // Succes
+        Success,
+        // Echec
+        Failed,
+        // Wi-Fi connecte (STA)
+        WifiConnected,
+        // Wi-Fi coupe (STA)
+        WifiOff,
+        // Surchauffe
+        OverTemperature,
+        // Sequence de demarrage
+        Startup,
+        // Systeme pret
+        SystemReady,
         // Avertissement general (2 bips courts)
         Warn,
         // Erreur non verrouillee (3 bips longs)
@@ -39,6 +53,13 @@ public:
     bool isEnabled() const;
 
     // Helpers (API lisible)
+    void playSuccess();
+    void playFailed();
+    void playWiFiConnected();
+    void playWiFiOff();
+    void playOverTemperature();
+    void playStartupSequence();
+    void playSystemReady();
     void playCommand();
     void playWarn();
     void playError();

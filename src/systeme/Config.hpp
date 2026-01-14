@@ -95,8 +95,8 @@
 // Tension moteur (V) utilisee pour calculer la puissance: P = V * I
 #define DEFAULT_MOTOR_VCC_V          12.0f
 
-// ACS712ELCTR-20A-T
-// Offset "0A" (mV) (typique: ~2500 mV)
+// ACS712ELCTR-20A-T (mesure +/-20A)
+// Offset "0A" (mV) (typique: ~2500 mV a Vcc=5V)
 #define DEFAULT_CURRENT_ZERO_MV      2500.0f
 // Sensibilite (mV/A) (datasheet: ~100 mV/A pour ACS712 20A)
 #define DEFAULT_CURRENT_SENS_MV_A     100.0f
@@ -105,7 +105,7 @@
 // Ex: si un diviseur 2:1 est utilise => Vadc = Vsensor/2 => input_scale = 0.5
 #define DEFAULT_CURRENT_INPUT_SCALE  1.0f
 // Reference ADC (V) et resolution max (code)
-#define DEFAULT_ADC_REF_V            3.3f
+#define DEFAULT_ADC_REF_V            5.0f
 #define DEFAULT_ADC_MAX              4095
 
 // Marche temporisee

@@ -63,6 +63,13 @@ void Buzzer::playClientConnect() { enqueue(Pattern::ClientConnect); }
 void Buzzer::playClientDisconnect() { enqueue(Pattern::ClientDisconnect); }
 void Buzzer::playAuthFail() { enqueue(Pattern::AuthFail); }
 void Buzzer::playCommand() { enqueue(Pattern::Command); }
+void Buzzer::playSuccess() { enqueue(Pattern::Success); }
+void Buzzer::playFailed() { enqueue(Pattern::Failed); }
+void Buzzer::playWiFiConnected() { enqueue(Pattern::WifiConnected); }
+void Buzzer::playWiFiOff() { enqueue(Pattern::WifiOff); }
+void Buzzer::playOverTemperature() { enqueue(Pattern::OverTemperature); }
+void Buzzer::playStartupSequence() { enqueue(Pattern::Startup); }
+void Buzzer::playSystemReady() { enqueue(Pattern::SystemReady); }
 
 void Buzzer::enqueue(Pattern p) {
     if (!enabled_ || !queue_) return;
@@ -100,6 +107,39 @@ void Buzzer::play_(Pattern p) {
     switch (p) {
         case Pattern::Command:
             playTone_(1000, 80); silence_(80);
+            break;
+        case Pattern::Success:
+            playTone_(1000, 40); silence_(30);
+            playTone_(1300, 40); silence_(30);
+            playTone_(1600, 60); silence_(40);
+            break;
+        case Pattern::Failed:
+            for (int i = 0; i < 2; ++i) {
+                playTone_(500, 50);
+                silence_(50);
+            }
+            break;
+        case Pattern::WifiConnected:
+            playTone_(1200, 100); silence_(50);
+            playTone_(1500, 100); silence_(60);
+            break;
+        case Pattern::WifiOff:
+            playTone_(800, 150); silence_(80);
+            break;
+        case Pattern::OverTemperature:
+            for (int i = 0; i < 4; ++i) {
+                playTone_(2000, 40);
+                silence_(60);
+            }
+            break;
+        case Pattern::Startup:
+            playTone_(600, 80); silence_(50);
+            playTone_(1000, 80); silence_(50);
+            playTone_(1400, 80); silence_(60);
+            break;
+        case Pattern::SystemReady:
+            playTone_(2000, 50); silence_(50);
+            playTone_(2500, 50); silence_(60);
             break;
         case Pattern::Warn:
             // 2 bips courts

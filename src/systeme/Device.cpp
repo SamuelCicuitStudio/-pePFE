@@ -185,7 +185,7 @@ void Device::setCurrentCalibration(float zeroMv, float sensMvPerA, float inputSc
 void Device::notifyCommand() {
     // Petit blink qui indique qu'une commande a ete acceptee (UI/bouton).
     if (leds_) leds_->notifyCommand();
-    BUZZ->playCommand();
+    BUZZ->playSuccess();
 }
 
 bool Device::submitCommand(const Command& cmd) {
@@ -529,9 +529,11 @@ void Device::raiseError_(ErrorCode code, const char* msg, const char* src) {
     if (leds_) {
         leds_->enqueueAlert(EventLevel::Error, lastErrorCode_);
     }
-    // OVC + Overtemp sont consideres "latch" : pattern sonore specifique.
-    if (code == ErrorCode::E01_OvcLatched || code == ErrorCode::E02_OverTemp) {
+    // OVC latch + surchauffe ont des sons specifiques.
+    if (code == ErrorCode::E01_OvcLatched) {
         BUZZ->playLatch();
+    } else if (code == ErrorCode::E02_OverTemp) {
+        BUZZ->playOverTemperature();
     } else {
         BUZZ->playError();
     }
